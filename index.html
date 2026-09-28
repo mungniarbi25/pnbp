@@ -1,0 +1,2478 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Executive Dashboard Realisasi Anggaran K/L (DIPA & SAKTI)</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#1e1b4b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- External Libraries (ECharts, PapaParse, SheetJS) -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Custom Embedded Responsive CSS -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        :root {
+            --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: #090d16;
+            color: #f1f5f9;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.4);
+            border-radius: 9999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.6);
+        }
+
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-panel-interactive {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s ease;
+        }
+
+        .glass-panel-interactive:hover {
+            background: rgba(24, 33, 53, 0.95);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+        }
+
+        .dropdown-menu-custom {
+            background: #0f172a;
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 10px 10px -5px rgba(0, 0, 0, 0.6);
+        }
+
+        .gradient-text-primary {
+            background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .drag-active {
+            border-color: #6366f1 !important;
+            background: rgba(99, 102, 241, 0.2) !important;
+        }
+
+        @media print {
+            body {
+                background-color: #ffffff !important;
+                color: #0f172a !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .glass-panel {
+                background: #ffffff !important;
+                border: 1px solid #e2e8f0 !important;
+                color: #0f172a !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-indigo-500 selection:text-white pb-20">
+
+    <!-- ==================== HEADER & TOP NAV ==================== -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2.5 sm:gap-3">
+                <div
+                    class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-blue-500 to-teal-400 flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-sm sm:text-lg font-bold tracking-tight gradient-text-primary leading-tight">
+                        Dashboard Anggaran K/L
+                    </h1>
+                    <p class="text-[10px] sm:text-xs text-slate-400 hidden sm:block">
+                        Monitoring DIPA & Realisasi Belanja SAKTI
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 sm:gap-3">
+                <div id="current-dataset-badge"
+                    class="hidden lg:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-800/90 text-indigo-300 border border-slate-700/60">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="dataset-name-label" class="truncate max-w-[180px]">Memuat Data...</span>
+                </div>
+
+                <button id="btn-export-excel"
+                    class="px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 transition flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span class="hidden sm:inline">Export</span> Excel
+                </button>
+
+                <button id="btn-print-report"
+                    class="px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    <span>PDF</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== MAIN CONTENT CONTAINER ==================== -->
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-4 sm:space-y-6">
+
+        <!-- 1. DATA INGESTION / UPLOAD BOX -->
+        <section
+            class="glass-panel rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-slate-800/80 shadow-xl relative overflow-hidden">
+            <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 sm:gap-4">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <span
+                            class="px-2 py-0.5 text-[10px] sm:text-[11px] font-bold rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">DATA
+                            IMPORTER</span>
+                        <span id="stat-total-baris"
+                            class="text-[11px] sm:text-xs text-emerald-400 font-mono font-bold">0 Baris Terbaca</span>
+                    </div>
+                    <h2 class="text-xs sm:text-base font-semibold text-slate-100 mt-1">
+                        Unggah Dataset Anggaran Baru (CSV / TSV / Excel .xlsx)
+                    </h2>
+                    <p class="text-[11px] sm:text-xs text-slate-400 mt-0.5 hidden sm:block">
+                        Mendukung dataset hingga <span class="text-indigo-300 font-semibold">500.000+ baris</span>.
+                        Cukup tarik file atau paste teks dari Excel.
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <div id="file-dropzone"
+                        class="flex-1 sm:flex-initial flex items-center justify-center gap-2.5 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-xl border-2 border-dashed border-indigo-500/50 hover:border-indigo-400 bg-indigo-950/20 hover:bg-indigo-950/40 cursor-pointer transition">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-indigo-400 shrink-0" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <div class="text-left">
+                            <div class="text-[11px] sm:text-xs font-bold text-white">📁 Upload File</div>
+                            <div class="text-[9px] sm:text-[10px] text-slate-400">.csv, .xlsx, .tsv</div>
+                        </div>
+                        <input type="file" id="file-input" accept=".csv,.xlsx,.xls,.tsv,.txt" class="hidden">
+                    </div>
+
+                    <button id="btn-paste-modal"
+                        class="px-3 sm:px-3.5 py-2.5 sm:py-3 text-[11px] sm:text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span>Paste Teks</span>
+                    </button>
+
+                    <button id="btn-load-sample"
+                        class="px-2.5 sm:px-3 py-2.5 sm:py-3 text-[11px] sm:text-xs font-semibold rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span class="hidden sm:inline">Sample</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. EXECUTIVE KPI CARDS -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+            <div
+                class="glass-panel-interactive rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-800/80 relative overflow-hidden">
+                <div class="flex items-center justify-between text-slate-400 text-[10px] sm:text-xs font-medium">
+                    <span class="truncate">PAGU AWAL</span>
+                    <span class="p-1 rounded bg-blue-500/10 text-blue-400 hidden sm:inline-block">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </span>
+                </div>
+                <div class="mt-1 sm:mt-2">
+                    <div id="kpi-total-pagu-awal" class="text-sm sm:text-2xl font-bold font-mono text-white truncate">Rp
+                        0</div>
+                </div>
+                <div id="kpi-total-pagu-awal-sub"
+                    class="text-[9px] sm:text-[11px] text-slate-400 font-mono mt-0.5 truncate">Rp 0</div>
+            </div>
+
+            <div
+                class="glass-panel-interactive rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-800/80 relative overflow-hidden">
+                <div class="flex items-center justify-between text-slate-400 text-[10px] sm:text-xs font-medium">
+                    <span class="truncate">PAGU REVISI</span>
+                    <span class="p-1 rounded bg-indigo-500/10 text-indigo-400 hidden sm:inline-block">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                    </span>
+                </div>
+                <div class="mt-1 sm:mt-2">
+                    <div id="kpi-total-pagu-revisi"
+                        class="text-sm sm:text-2xl font-bold font-mono text-indigo-200 truncate">Rp 0</div>
+                </div>
+                <div class="flex items-center justify-between mt-0.5 text-[9px] sm:text-[11px]">
+                    <span id="kpi-total-pagu-revisi-sub" class="text-slate-400 font-mono truncate max-w-[65%]">Rp
+                        0</span>
+                    <span id="kpi-deviasi-revisi" class="text-[9px] sm:text-xs">0%</span>
+                </div>
+            </div>
+
+            <div
+                class="glass-panel-interactive rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-800/80 relative overflow-hidden">
+                <div class="flex items-center justify-between text-slate-400 text-[10px] sm:text-xs font-medium">
+                    <span class="truncate">REALISASI SAKTI</span>
+                    <span class="p-1 rounded bg-emerald-500/10 text-emerald-400 hidden sm:inline-block">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </span>
+                </div>
+                <div class="mt-1 sm:mt-2">
+                    <div id="kpi-total-realisasi"
+                        class="text-sm sm:text-2xl font-bold font-mono text-emerald-400 truncate">Rp 0</div>
+                </div>
+                <div id="kpi-total-realisasi-sub"
+                    class="text-[9px] sm:text-[11px] text-slate-400 font-mono mt-0.5 truncate">Rp 0</div>
+            </div>
+
+            <div
+                class="glass-panel-interactive rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-slate-800/80 relative overflow-hidden">
+                <div class="flex items-center justify-between text-slate-400 text-[10px] sm:text-xs font-medium">
+                    <span class="truncate">% SERAPAN</span>
+                    <span id="kpi-badge-serapan"
+                        class="px-1.5 py-0.2 text-[9px] sm:text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400">0%</span>
+                </div>
+                <div class="mt-1 sm:mt-2 flex items-baseline justify-between">
+                    <div id="kpi-persen-serapan" class="text-sm sm:text-2xl font-bold font-mono text-white">0.00%</div>
+                    <div class="text-right">
+                        <span id="kpi-total-sisa"
+                            class="text-[10px] sm:text-xs font-mono font-semibold text-amber-400 block truncate">Rp
+                            0</span>
+                    </div>
+                </div>
+                <div class="w-full bg-slate-800 h-1.5 sm:h-2 rounded-full mt-1.5 sm:mt-2.5 overflow-hidden">
+                    <div id="kpi-progress-bar"
+                        class="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 transition-all duration-500 rounded-full"
+                        style="width: 0%"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. ADVANCE MULTI-FILTER & SMART KEYWORD SEARCH PANEL -->
+        <section
+            class="glass-panel rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-slate-800/80 shadow-lg space-y-3 sm:space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5 sm:pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="p-1 sm:p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-bold text-slate-100">Advance Filter & Multi-Pencarian</h3>
+                        <p class="text-[10px] sm:text-[11px] text-slate-400 hidden sm:block">Ketik kata kunci atau
+                            centang lebih dari 1 opsi pada Program, Komponen, K/L, dll.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="btn-toggle-filter-mobile"
+                        class="sm:hidden text-[11px] font-semibold text-indigo-400 bg-slate-800 px-2 py-1 rounded border border-slate-700">
+                        Buka/Tutup Filter
+                    </button>
+                    <button id="btn-reset-filters"
+                        class="text-[11px] sm:text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition flex items-center gap-1 bg-slate-800/80 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border border-slate-700">
+                        <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>Reset</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Filter Tags Container -->
+            <div id="active-filter-tags" class="flex flex-wrap gap-1.5 text-[11px] sm:text-xs empty:hidden"></div>
+
+            <!-- Filter Controls Grid -->
+            <div id="filter-controls-container"
+                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 text-xs">
+
+                <!-- Filter 1: Program -->
+                <div class="space-y-1 relative" id="wrapper-filter-program">
+                    <div class="flex items-center justify-between">
+                        <label class="font-medium text-slate-300 text-[11px] sm:text-xs">Program (Multi-Select)</label>
+                        <span id="badge-count-program" class="text-[10px] text-indigo-400 font-mono">Semua</span>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="input-search-program" placeholder="Ketik program (cth: dukungan)..."
+                            class="w-full bg-slate-900 border border-slate-700 focus:border-indigo-500 rounded-lg pl-2.5 pr-8 py-1.5 sm:py-2 text-slate-200 placeholder-slate-500 focus:outline-none text-[11px] sm:text-xs">
+                        <button id="btn-toggle-program-dropdown"
+                            class="absolute right-1.5 top-1.5 p-1 text-slate-400 hover:text-white rounded bg-slate-800">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="dropdown-program"
+                        class="hidden absolute left-0 right-0 top-full mt-1 z-50 dropdown-menu-custom rounded-xl p-2.5 max-h-60 overflow-y-auto space-y-1.5">
+                        <div class="flex items-center justify-between pb-1.5 border-b border-slate-800 text-[11px]">
+                            <button id="btn-select-all-program"
+                                class="text-indigo-400 hover:underline font-semibold">Pilih Semua Hasil</button>
+                            <button id="btn-clear-program" class="text-slate-400 hover:underline">Hapus Pilihan</button>
+                        </div>
+                        <div id="list-items-program" class="space-y-1 pt-1"></div>
+                    </div>
+                </div>
+
+                <!-- Filter 2: KOMPONEN -->
+                <div class="space-y-1 relative" id="wrapper-filter-komponen">
+                    <div class="flex items-center justify-between">
+                        <label class="font-medium text-slate-300 text-[11px] sm:text-xs">Komponen (Multi-Select)</label>
+                        <span id="badge-count-komponen" class="text-[10px] text-indigo-400 font-mono">Semua</span>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="input-search-komponen" placeholder="Ketik komponen (cth: gaji, alkes)..."
+                            class="w-full bg-slate-900 border border-slate-700 focus:border-indigo-500 rounded-lg pl-2.5 pr-8 py-1.5 sm:py-2 text-slate-200 placeholder-slate-500 focus:outline-none text-[11px] sm:text-xs">
+                        <button id="btn-toggle-komponen-dropdown"
+                            class="absolute right-1.5 top-1.5 p-1 text-slate-400 hover:text-white rounded bg-slate-800">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="dropdown-komponen"
+                        class="hidden absolute left-0 right-0 top-full mt-1 z-50 dropdown-menu-custom rounded-xl p-2.5 max-h-60 overflow-y-auto space-y-1.5">
+                        <div class="flex items-center justify-between pb-1.5 border-b border-slate-800 text-[11px]">
+                            <button id="btn-select-all-komponen"
+                                class="text-indigo-400 hover:underline font-semibold">Pilih Semua Hasil</button>
+                            <button id="btn-clear-komponen" class="text-slate-400 hover:underline">Hapus
+                                Pilihan</button>
+                        </div>
+                        <div id="list-items-komponen" class="space-y-1 pt-1"></div>
+                    </div>
+                </div>
+
+                <!-- Filter 3: Kementerian / Lembaga (K/L) -->
+                <div class="space-y-1 relative" id="wrapper-filter-kl">
+                    <div class="flex items-center justify-between">
+                        <label class="font-medium text-slate-300 text-[11px] sm:text-xs">Kementerian / Lembaga
+                            (K/L)</label>
+                        <span id="badge-count-kl" class="text-[10px] text-indigo-400 font-mono">Semua</span>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="input-search-kl" placeholder="Ketik nama/kode K/L..."
+                            class="w-full bg-slate-900 border border-slate-700 focus:border-indigo-500 rounded-lg pl-2.5 pr-8 py-1.5 sm:py-2 text-slate-200 placeholder-slate-500 focus:outline-none text-[11px] sm:text-xs">
+                        <button id="btn-toggle-kl-dropdown"
+                            class="absolute right-1.5 top-1.5 p-1 text-slate-400 hover:text-white rounded bg-slate-800">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="dropdown-kl"
+                        class="hidden absolute left-0 right-0 top-full mt-1 z-50 dropdown-menu-custom rounded-xl p-2.5 max-h-60 overflow-y-auto space-y-1.5">
+                        <div class="flex items-center justify-between pb-1.5 border-b border-slate-800 text-[11px]">
+                            <button id="btn-select-all-kl" class="text-indigo-400 hover:underline font-semibold">Pilih
+                                Semua Hasil</button>
+                            <button id="btn-clear-kl" class="text-slate-400 hover:underline">Hapus Pilihan</button>
+                        </div>
+                        <div id="list-items-kl" class="space-y-1 pt-1"></div>
+                    </div>
+                </div>
+
+                <!-- Filter 4: Kegiatan -->
+                <div class="space-y-1 relative" id="wrapper-filter-kegiatan">
+                    <div class="flex items-center justify-between">
+                        <label class="font-medium text-slate-300 text-[11px] sm:text-xs">Kegiatan (Multi-Select)</label>
+                        <span id="badge-count-kegiatan" class="text-[10px] text-indigo-400 font-mono">Semua</span>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="input-search-kegiatan" placeholder="Ketik nama/kode kegiatan..."
+                            class="w-full bg-slate-900 border border-slate-700 focus:border-indigo-500 rounded-lg pl-2.5 pr-8 py-1.5 sm:py-2 text-slate-200 placeholder-slate-500 focus:outline-none text-[11px] sm:text-xs">
+                        <button id="btn-toggle-kegiatan-dropdown"
+                            class="absolute right-1.5 top-1.5 p-1 text-slate-400 hover:text-white rounded bg-slate-800">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="dropdown-kegiatan"
+                        class="hidden absolute left-0 right-0 top-full mt-1 z-50 dropdown-menu-custom rounded-xl p-2.5 max-h-60 overflow-y-auto space-y-1.5">
+                        <div class="flex items-center justify-between pb-1.5 border-b border-slate-800 text-[11px]">
+                            <button id="btn-select-all-kegiatan"
+                                class="text-indigo-400 hover:underline font-semibold">Pilih Semua Hasil</button>
+                            <button id="btn-clear-kegiatan" class="text-slate-400 hover:underline">Hapus
+                                Pilihan</button>
+                        </div>
+                        <div id="list-items-kegiatan" class="space-y-1 pt-1"></div>
+                    </div>
+                </div>
+
+                <!-- Filter 5: Sumber Dana -->
+                <div class="space-y-1 relative" id="wrapper-filter-sumber-dana">
+                    <div class="flex items-center justify-between">
+                        <label class="font-medium text-slate-300 text-[11px] sm:text-xs">Sumber Dana</label>
+                        <span id="badge-count-sumber-dana" class="text-[10px] text-indigo-400 font-mono">Semua</span>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="input-search-sumber-dana" placeholder="Ketik (RM, PNBP, SBSN)..."
+                            class="w-full bg-slate-900 border border-slate-700 focus:border-indigo-500 rounded-lg pl-2.5 pr-8 py-1.5 sm:py-2 text-slate-200 placeholder-slate-500 focus:outline-none text-[11px] sm:text-xs">
+                        <button id="btn-toggle-sumber-dana-dropdown"
+                            class="absolute right-1.5 top-1.5 p-1 text-slate-400 hover:text-white rounded bg-slate-800">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="dropdown-sumber-dana"
+                        class="hidden absolute left-0 right-0 top-full mt-1 z-50 dropdown-menu-custom rounded-xl p-2.5 max-h-60 overflow-y-auto space-y-1.5">
+                        <div class="flex items-center justify-between pb-1.5 border-b border-slate-800 text-[11px]">
+                            <button id="btn-select-all-sumber-dana"
+                                class="text-indigo-400 hover:underline font-semibold">Pilih Semua Hasil</button>
+                            <button id="btn-clear-sumber-dana" class="text-slate-400 hover:underline">Hapus
+                                Pilihan</button>
+                        </div>
+                        <div id="list-items-sumber-dana" class="space-y-1 pt-1"></div>
+                    </div>
+                </div>
+
+                <!-- Filter 6: Jenis Belanja (Akun) -->
+                <div class="space-y-1 relative" id="wrapper-filter-jenis-belanja">
+                    <div class="flex items-center justify-between">
+                        <label class="font-medium text-slate-300 text-[11px] sm:text-xs">Jenis Belanja (Akun)</label>
+                        <span id="badge-count-jenis-belanja" class="text-[10px] text-indigo-400 font-mono">Semua</span>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="input-search-jenis-belanja" placeholder="Ketik 51 Pegawai, 52 Barang..."
+                            class="w-full bg-slate-900 border border-slate-700 focus:border-indigo-500 rounded-lg pl-2.5 pr-8 py-1.5 sm:py-2 text-slate-200 placeholder-slate-500 focus:outline-none text-[11px] sm:text-xs">
+                        <button id="btn-toggle-jenis-belanja-dropdown"
+                            class="absolute right-1.5 top-1.5 p-1 text-slate-400 hover:text-white rounded bg-slate-800">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="dropdown-jenis-belanja"
+                        class="hidden absolute left-0 right-0 top-full mt-1 z-50 dropdown-menu-custom rounded-xl p-2.5 max-h-60 overflow-y-auto space-y-1.5">
+                        <div class="flex items-center justify-between pb-1.5 border-b border-slate-800 text-[11px]">
+                            <button id="btn-select-all-jenis-belanja"
+                                class="text-indigo-400 hover:underline font-semibold">Pilih Semua Hasil</button>
+                            <button id="btn-clear-jenis-belanja" class="text-slate-400 hover:underline">Hapus
+                                Pilihan</button>
+                        </div>
+                        <div id="list-items-jenis-belanja" class="space-y-1 pt-1"></div>
+                    </div>
+                </div>
+
+                <!-- Filter 7: Tahun & Status Serapan -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-300 mb-1 font-medium text-[11px] sm:text-xs">Tahun</label>
+                        <select id="filter-tahun"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 sm:py-2 text-slate-200 focus:outline-none text-[11px] sm:text-xs">
+                            <option value="ALL">Semua</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-300 mb-1 font-medium text-[11px] sm:text-xs">Status
+                            Serapan</label>
+                        <select id="filter-status-serapan"
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 sm:py-2 text-slate-200 focus:outline-none text-[11px] sm:text-xs">
+                            <option value="ALL">Semua</option>
+                            <option value="SANGAT_BAIK">🟢 ≥90%</option>
+                            <option value="BAIK">🔵 75-89%</option>
+                            <option value="SEDANG">🟡 50-74%</option>
+                            <option value="KRITIS">🔴 &lt;50%</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Filter 8: Pencarian Bebas Global -->
+                <div>
+                    <label class="block text-slate-300 mb-1 font-medium text-[11px] sm:text-xs">Cari Global (Teks
+                        Bebas)</label>
+                    <div class="relative">
+                        <input type="text" id="search-input" placeholder="Cari di semua kolom..."
+                            class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-7 pr-2.5 py-1.5 sm:py-2 text-slate-200 placeholder-slate-500 focus:outline-none text-[11px] sm:text-xs">
+                        <svg class="w-3.5 h-3.5 text-slate-500 absolute left-2 top-2.5" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 4. DYNAMIC CUSTOM CHART STUDIO -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div
+                class="lg:col-span-2 glass-panel rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-slate-800/80 shadow-xl space-y-3 sm:space-y-4">
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-800 pb-2.5 sm:pb-3">
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                            <h3 class="text-xs sm:text-base font-bold text-slate-100">Studio Visualisasi Interaktif</h3>
+                        </div>
+                        <p class="text-[10px] sm:text-xs text-slate-400">Pilih grafik, dimensi, dan metrik sesuai
+                            analisis Anda</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-1.5 text-[11px] sm:text-xs">
+                        <select id="chart-type-selector"
+                            class="bg-slate-900 border border-indigo-500/40 rounded-lg px-2 py-1 text-indigo-300 font-medium focus:outline-none">
+                            <option value="bar">📊 Bar Chart</option>
+                            <option value="horizontal-bar">📶 Horizontal Bar</option>
+                            <option value="donut">🍩 Kue / Donut</option>
+                            <option value="pie">🥧 Pie Chart</option>
+                            <option value="treemap">🧱 Treemap</option>
+                        </select>
+
+                        <select id="chart-dimension-selector"
+                            class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200 focus:outline-none">
+                            <option value="JENIS_BELANJA">Grup: Jenis Belanja</option>
+                            <option value="SUMBER_DANA">Grup: Sumber Dana</option>
+                            <option value="PROGRAM">Grup: Program</option>
+                            <option value="KOMPONEN">Grup: Komponen</option>
+                            <option value="KEGIATAN">Grup: Kegiatan</option>
+                            <option value="KL">Grup: K/L</option>
+                            <option value="AKUN">Grup: Akun 6 Digit</option>
+                        </select>
+
+                        <select id="chart-metric-selector"
+                            class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200 focus:outline-none">
+                            <option value="REALISASI">Realisasi</option>
+                            <option value="PAGU_REVISI">Pagu Revisi</option>
+                            <option value="PAGU_AWAL">Pagu Awal</option>
+                            <option value="SISA_PAGU">Sisa Pagu</option>
+                            <option value="PERSEN_SERAPAN">% Serapan</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="chart-custom" class="w-full h-72 sm:h-96"></div>
+            </div>
+
+            <div
+                class="glass-panel rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-slate-800/80 shadow-xl space-y-3 sm:space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2.5 sm:pb-3">
+                    <div>
+                        <h3 class="text-xs sm:text-base font-bold text-slate-100">Komparasi Pagu vs Realisasi</h3>
+                        <p class="text-[10px] sm:text-xs text-slate-400">Pagu vs SAKTI vs Sisa</p>
+                    </div>
+                    <select id="komparasi-dimension-selector"
+                        class="text-[11px] sm:text-xs bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200 focus:outline-none">
+                        <option value="PROGRAM">Per Program</option>
+                        <option value="KOMPONEN">Per Komponen</option>
+                        <option value="KL">Per K/L</option>
+                        <option value="SUMBER_DANA">Per Sumber Dana</option>
+                        <option value="JENIS_BELANJA">Per Jenis Belanja</option>
+                    </select>
+                </div>
+
+                <div id="chart-komparasi" class="w-full h-72 sm:h-96"></div>
+            </div>
+        </section>
+
+        <!-- 5. ADVANCED ANALYTICS SECTION (UPGRADED: CARD 1 WITH KUE/DONUT TOGGLE, CARD 2 WITH PRECISE PERCENTAGES) -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+
+            <!-- Card 1: Distribusi / Kue Chart / Sunburst Interaktif -->
+            <div
+                class="glass-panel rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-slate-800/80 shadow-xl space-y-2.5">
+                <div class="border-b border-slate-800 pb-2 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-bold text-slate-100">Distribusi Belanja & Proporsi</h3>
+                        <p class="text-[10px] sm:text-xs text-slate-400">Kue / Donut / Sunburst Proporsi</p>
+                    </div>
+                    <!-- Type toggle for Card 1 -->
+                    <select id="drilldown-type-selector"
+                        class="text-[10px] sm:text-[11px] bg-slate-900 border border-indigo-500/40 rounded-lg px-2 py-1 text-indigo-300 focus:outline-none">
+                        <option value="donut">🍩 Kue / Donut Belanja</option>
+                        <option value="donut-dana">🍩 Kue / Donut Sumber Dana</option>
+                        <option value="sunburst">☀️ Sunburst Hierarki</option>
+                        <option value="treemap">🧱 Treemap Hierarki</option>
+                    </select>
+                </div>
+                <div id="chart-drilldown" class="w-full h-64 sm:h-72"></div>
+            </div>
+
+            <!-- Card 2: Evaluasi Serapan Kegiatan (With High Precision Decimals & Bottleneck Warning) -->
+            <div
+                class="glass-panel rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-slate-800/80 shadow-xl space-y-2.5">
+                <div class="border-b border-slate-800 pb-2 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-bold text-slate-100">Evaluasi Serapan Kegiatan</h3>
+                        <p class="text-[10px] sm:text-xs text-slate-400">Bottleneck (Terendah) vs Top Serapan</p>
+                    </div>
+                    <span
+                        class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-rose-500/20 text-rose-400 border border-rose-500/30">Presisi
+                        Desimal</span>
+                </div>
+                <div id="chart-ranking" class="w-full h-64 sm:h-72"></div>
+            </div>
+
+            <!-- Card 3: Tren Anggaran Multi-Tahun -->
+            <div
+                class="glass-panel rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-slate-800/80 shadow-xl space-y-2.5">
+                <div class="border-b border-slate-800 pb-2">
+                    <h3 class="text-xs sm:text-sm font-bold text-slate-100">Tren Anggaran Multi-Tahun</h3>
+                    <p class="text-[10px] sm:text-xs text-slate-400">Pertumbuhan Pagu, Realisasi, & %</p>
+                </div>
+                <div id="chart-trend" class="w-full h-64 sm:h-72"></div>
+            </div>
+        </section>
+
+        <!-- 6. PAGINATED DATA TABLE -->
+        <section
+            class="glass-panel rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border border-slate-800/80 shadow-xl space-y-3 sm:space-y-4">
+            <div
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-800 pb-2.5 sm:pb-3">
+                <div>
+                    <h3 class="text-xs sm:text-base font-bold text-slate-100">Rincian Data Anggaran & Realisasi</h3>
+                    <p id="table-page-info" class="text-[10px] sm:text-xs text-slate-400">Menampilkan data...</p>
+                </div>
+
+                <div class="flex items-center justify-between sm:justify-end gap-2 text-xs">
+                    <div class="flex items-center gap-1.5 text-slate-400 text-[11px]">
+                        <span>Baris:</span>
+                        <select id="table-page-size"
+                            class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+
+                    <div id="table-pagination-controls" class="flex items-center gap-1.5"></div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-800 -mx-1 sm:mx-0">
+                <table class="w-full text-left border-collapse text-[11px] sm:text-xs min-w-[750px]">
+                    <thead>
+                        <tr
+                            class="bg-slate-900/90 font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800 select-none">
+                            <th class="px-2.5 py-2.5 text-center w-10">No</th>
+                            <th class="px-2.5 py-2.5 text-center cursor-pointer hover:text-indigo-300"
+                                data-sort="TAHUN">Tahun ↕</th>
+                            <th class="px-2.5 py-2.5 cursor-pointer hover:text-indigo-300" data-sort="KL">K/L ↕</th>
+                            <th class="px-2.5 py-2.5 cursor-pointer hover:text-indigo-300" data-sort="PROGRAM">Program &
+                                Kegiatan ↕</th>
+                            <th class="px-2.5 py-2.5 cursor-pointer hover:text-indigo-300" data-sort="KOMPONEN">Komponen
+                                & Dana ↕</th>
+                            <th class="px-2.5 py-2.5 text-right cursor-pointer hover:text-indigo-300"
+                                data-sort="PAGU_AWAL">Pagu Awal ↕</th>
+                            <th class="px-2.5 py-2.5 text-right cursor-pointer hover:text-indigo-300 text-indigo-300"
+                                data-sort="PAGU_REVISI">Pagu Revisi ↕</th>
+                            <th class="px-2.5 py-2.5 text-right cursor-pointer hover:text-indigo-300 text-emerald-400"
+                                data-sort="REALISASI">Realisasi ↕</th>
+                            <th class="px-2.5 py-2.5 text-center cursor-pointer hover:text-indigo-300"
+                                data-sort="PERSEN_SERAPAN">% Serapan ↕</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-800/60 font-sans">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==================== PASTE MODAL ==================== -->
+    <div id="paste-modal"
+        class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+        <div
+            class="glass-panel p-4 sm:p-6 rounded-2xl max-w-2xl w-full border border-indigo-500/40 text-left space-y-3 sm:space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                <h4 class="text-xs sm:text-base font-bold text-white flex items-center gap-2">
+                    <span>📋</span> Paste Data Langsung dari Excel
+                </h4>
+                <button id="btn-close-paste-modal" class="text-slate-400 hover:text-white text-lg">&times;</button>
+            </div>
+            <p class="text-[11px] sm:text-xs text-slate-400">
+                Salin baris data langsung dari Excel (termasuk judul kolom), lalu tempelkan (*Ctrl + V*) di bawah ini:
+            </p>
+            <textarea id="paste-textarea" rows="7"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500"
+                placeholder="KEMENTERIAN/LEMBAGA&#9;PROGRAM&#9;KEGIATAN..."></textarea>
+            <div class="flex justify-end gap-2">
+                <button id="btn-cancel-paste"
+                    class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">Batal</button>
+                <button id="btn-submit-paste"
+                    class="px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold">Proses
+                    & Muat Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== UPLOAD PROGRESS MODAL ==================== -->
+    <div id="upload-progress-modal"
+        class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div
+            class="glass-panel p-5 sm:p-6 rounded-2xl max-w-md w-full border border-indigo-500/40 text-center space-y-4 shadow-2xl">
+            <div
+                class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-indigo-500/20 text-indigo-400 mx-auto flex items-center justify-center animate-spin">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+            </div>
+            <div>
+                <h4 class="text-sm sm:text-base font-bold text-white">Memproses Dataset</h4>
+                <p id="upload-progress-text" class="text-[11px] sm:text-xs text-slate-300 mt-1">Sedang membaca dan
+                    mengindeks baris data...</p>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                <div id="upload-progress-bar"
+                    class="h-full bg-gradient-to-r from-indigo-500 to-teal-400 rounded-full animate-pulse"
+                    style="width: 100%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== COMPLETE STANDALONE JAVASCRIPT ==================== -->
+    <script>
+        const DEFAULT_SAMPLE_DATA = [
+            {
+                "KEMENTERIAN/LEMBAGA": "001 MAJELIS PERMUSYAWARATAN RAKYAT (MPR)",
+                "PROGRAM": "001 01 WA Program Dukungan Manajemen",
+                "KEGIATAN": "1001 Pengelolaan Administrasi dan Fasilitasi Reformasi Birokrasi",
+                "OUTPUT (KRO)": "1001 EBA Layanan Dukungan Manajemen Internal",
+                "SUB OUTPUT (RO)": "1001 EBA 957 Layanan Hukum",
+                "KOMPONEN": "051 Advokasi Hukum MPR RI dan Sekretariat Jenderal MPR RI",
+                "SUMBER DANA": "01 RUPIAH MURNI",
+                "AKUN 6 DIGIT": "521211 Belanja Bahan",
+                "PAGU DIPA AWAL": 31800000,
+                "PAGU DIPA REVISI": 27000000,
+                "REALISASI BELANJA KL (SAKTI)": 26992000,
+                "TAHUN": 2025
+            },
+            {
+                "KEMENTERIAN/LEMBAGA": "001 MAJELIS PERMUSYAWARATAN RAKYAT (MPR)",
+                "PROGRAM": "001 01 WA Program Dukungan Manajemen",
+                "KEGIATAN": "1001 Pengelolaan Administrasi dan Fasilitasi Reformasi Birokrasi",
+                "OUTPUT (KRO)": "1001 EBA Layanan Dukungan Manajemen Internal",
+                "SUB OUTPUT (RO)": "1001 EBA 957 Layanan Hukum",
+                "KOMPONEN": "051 Advokasi Hukum MPR RI dan Sekretariat Jenderal MPR RI",
+                "SUMBER DANA": "01 RUPIAH MURNI",
+                "AKUN 6 DIGIT": "521219 Belanja Barang Non Operasional Lainnya",
+                "PAGU DIPA AWAL": 1400000,
+                "PAGU DIPA REVISI": 1710000,
+                "REALISASI BELANJA KL (SAKTI)": 1700000,
+                "TAHUN": 2025
+            },
+            {
+                "KEMENTERIAN/LEMBAGA": "001 MAJELIS PERMUSYAWARATAN RAKYAT (MPR)",
+                "PROGRAM": "001 01 WA Program Dukungan Manajemen",
+                "KEGIATAN": "1001 Pengelolaan Administrasi dan Fasilitasi Reformasi Birokrasi",
+                "OUTPUT (KRO)": "1001 EBA Layanan Dukungan Manajemen Internal",
+                "SUB OUTPUT (RO)": "1001 EBA 957 Layanan Hukum",
+                "KOMPONEN": "051 Penyusunan Produk Hukum",
+                "SUMBER DANA": "01 RUPIAH MURNI",
+                "AKUN 6 DIGIT": "521211 Belanja Bahan",
+                "PAGU DIPA AWAL": 61800000,
+                "PAGU DIPA REVISI": 34950000,
+                "REALISASI BELANJA KL (SAKTI)": 5175000,
+                "TAHUN": 2026
+            },
+            {
+                "KEMENTERIAN/LEMBAGA": "002 DEWAN PERWAKILAN RAKYAT (DPR)",
+                "PROGRAM": "002 01 WA Program Dukungan Manajemen",
+                "KEGIATAN": "1002 Pengelolaan Administrasi dan Pelayanan Persidangan",
+                "OUTPUT (KRO)": "1002 EBA Layanan Dukungan Manajemen",
+                "SUB OUTPUT (RO)": "1002 EBA 001 Layanan Sidang Paripurna",
+                "KOMPONEN": "051 Pelaksanaan Sidang dan Rapat",
+                "SUMBER DANA": "01 RUPIAH MURNI",
+                "AKUN 6 DIGIT": "521211 Belanja Bahan",
+                "PAGU DIPA AWAL": 4500000000,
+                "PAGU DIPA REVISI": 4200000000,
+                "REALISASI BELANJA KL (SAKTI)": 4100000000,
+                "TAHUN": 2025
+            },
+            {
+                "KEMENTERIAN/LEMBAGA": "015 KEMENTERIAN KEUANGAN",
+                "PROGRAM": "015 01 BA Program Pengelolaan Perbendaharaan Negara",
+                "KEGIATAN": "2105 Transformasi Digital Keuangan Negara (SAKTI)",
+                "OUTPUT (KRO)": "2105 QCA Sistem Informasi Perbendaharaan",
+                "SUB OUTPUT (RO)": "2105 QCA 001 Pengembangan Fitur SAKTI",
+                "KOMPONEN": "051 Cloud & IT Infrastructure",
+                "SUMBER DANA": "04 PNBP",
+                "AKUN 6 DIGIT": "536111 Belanja Modal Lisensi Software",
+                "PAGU DIPA AWAL": 15000000000,
+                "PAGU DIPA REVISI": 16500000000,
+                "REALISASI BELANJA KL (SAKTI)": 15950000000,
+                "TAHUN": 2025
+            }
+        ];
+
+        const state = {
+            rawData: [],
+            filteredData: [],
+            activeFilters: {
+                tahun: 'ALL',
+                statusSerapan: 'ALL',
+                searchQuery: '',
+                kwProgram: '',
+                kwKomponen: '',
+                kwKL: '',
+                kwKegiatan: '',
+                kwSumberDana: '',
+                kwJenisBelanja: '',
+                selectedPrograms: new Set(),
+                selectedKomponens: new Set(),
+                selectedKLs: new Set(),
+                selectedKegiatans: new Set(),
+                selectedSumberDanas: new Set(),
+                selectedJenisBelanjas: new Set()
+            },
+            tablePagination: {
+                currentPage: 1,
+                pageSize: 25,
+                sortColumn: 'REALISASI',
+                sortDirection: 'desc'
+            },
+            chartConfig: {
+                customChartType: 'bar',
+                customDimension: 'JENIS_BELANJA',
+                customMetric: 'REALISASI',
+                komparasiDimension: 'PROGRAM',
+                drilldownType: 'donut' // 'donut', 'donut-dana', 'sunburst', 'treemap'
+            },
+            columnMapping: {
+                kl: 'KEMENTERIAN/LEMBAGA',
+                program: 'PROGRAM',
+                kegiatan: 'KEGIATAN',
+                kro: 'OUTPUT (KRO)',
+                ro: 'SUB OUTPUT (RO)',
+                komponen: 'KOMPONEN',
+                sumberDana: 'SUMBER DANA',
+                akun: 'AKUN 6 DIGIT',
+                paguAwal: 'PAGU DIPA AWAL',
+                paguRevisi: 'PAGU DIPA REVISI',
+                realisasi: 'REALISASI BELANJA KL (SAKTI)',
+                tahun: 'TAHUN'
+            },
+            charts: {
+                customChart: null,
+                komparasiChart: null,
+                drilldownChart: null,
+                rankingChart: null,
+                trendChart: null
+            }
+        };
+
+        const formatCurrency = (val, compact = false) => {
+            if (val === null || val === undefined || isNaN(val)) return 'Rp 0';
+            if (compact) {
+                const absVal = Math.abs(val);
+                if (absVal >= 1e12) return `Rp ${(val / 1e12).toFixed(2)} T`;
+                if (absVal >= 1e9) return `Rp ${(val / 1e9).toFixed(2)} M`;
+                if (absVal >= 1e6) return `Rp ${(val / 1e6).toFixed(2)} Jt`;
+                if (absVal >= 1e3) return `Rp ${(val / 1e3).toFixed(1)} Rb`;
+            }
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(val);
+        };
+
+        // Precise Percentage Formatter (Never wrongly rounds 99.95% to 100%)
+        const formatPercent = (val, pagu = 0, realisasi = 0) => {
+            if (val === null || val === undefined || isNaN(val)) return '0.00%';
+            const num = Number(val);
+            if (pagu > 0 && realisasi < pagu && num >= 99.99) {
+                return '99.99%';
+            }
+            return `${num.toFixed(2)}%`;
+        };
+
+        const parseNumber = (val) => {
+            if (typeof val === 'number') return isNaN(val) ? 0 : val;
+            if (!val) return 0;
+            let str = String(val).replace(/Rp|\s/gi, '').trim();
+            if (str.includes(',') && str.includes('.')) {
+                str = str.replace(/\./g, '').replace(',', '.');
+            } else if (str.includes(',')) {
+                str = str.replace(',', '.');
+            }
+            const num = parseFloat(str);
+            return isNaN(num) ? 0 : num;
+        };
+
+        const getJenisBelanja = (akunStr) => {
+            if (!akunStr) return 'Lainnya';
+            const str = String(akunStr).trim();
+            const match = str.match(/\b(5[1-8])/);
+            const code = match ? match[1] : (str.length >= 2 ? str.substring(0, 2) : '');
+            switch (code) {
+                case '51': return '51 - Belanja Pegawai';
+                case '52': return '52 - Belanja Barang';
+                case '53': return '53 - Belanja Modal';
+                case '54': return '54 - Pembayaran Bunga Utang';
+                case '55': return '55 - Belanja Subsidi';
+                case '56': return '56 - Belanja Hibah';
+                case '57': return '57 - Belanja Bantuan Sosial';
+                case '58': return '58 - Belanja Lain-lain';
+                default: return str.length > 2 ? str.substring(0, 25) : 'Lain-lain';
+            }
+        };
+
+        const escapeHtml = (str) => {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        };
+
+        const matchAllKeywords = (targetStr, keywordStr) => {
+            if (!keywordStr || !keywordStr.trim()) return true;
+            if (!targetStr) return false;
+            const target = String(targetStr).toLowerCase();
+            const tokens = keywordStr.toLowerCase().trim().split(/\s+/).filter(Boolean);
+            return tokens.every(token => target.includes(token));
+        };
+
+        const detectColumns = (headers) => {
+            const clean = (h) => String(h).toUpperCase().replace(/[^A-Z0-9]/g, '');
+            const map = { ...state.columnMapping };
+            headers.forEach((h) => {
+                const c = clean(h);
+                if (c.includes('KEMENTERIAN') || c.includes('LEMBAGA') || c === 'KL') map.kl = h;
+                else if (c.includes('PROGRAM')) map.program = h;
+                else if (c.includes('KEGIATAN')) map.kegiatan = h;
+                else if (c.includes('KRO') || c.includes('OUTPUT') && !c.includes('SUB')) map.kro = h;
+                else if (c.includes('SUB') || c.includes('RO')) map.ro = h;
+                else if (c.includes('KOMPONEN')) map.komponen = h;
+                else if (c.includes('SUMBER') || c.includes('DANA')) map.sumberDana = h;
+                else if (c.includes('AKUN')) map.akun = h;
+                else if (c.includes('PAGU') && (c.includes('AWAL') || c.includes('DIPAAWAL'))) map.paguAwal = h;
+                else if (c.includes('PAGU') && (c.includes('REVISI') || c.includes('DIPAREVISI') || c.includes('AKHIR'))) map.paguRevisi = h;
+                else if (c.includes('REALISASI') || c.includes('SAKTI') || c.includes('SP2D')) map.realisasi = h;
+                else if (c.includes('TAHUN') || c.includes('YEAR')) map.tahun = h;
+            });
+            return map;
+        };
+
+        const processRawRecords = (rows, detectedMap) => {
+            const mapped = [];
+            const len = rows.length;
+
+            for (let i = 0; i < len; i++) {
+                const row = rows[i];
+                if (!row) continue;
+
+                const kl = String(row[detectedMap.kl] || row['KEMENTERIAN/LEMBAGA'] || 'KL Tidak Terdefinisi').trim();
+                const program = String(row[detectedMap.program] || row['PROGRAM'] || '-').trim();
+                const kegiatan = String(row[detectedMap.kegiatan] || row['KEGIATAN'] || '-').trim();
+                const kro = String(row[detectedMap.kro] || row['OUTPUT (KRO)'] || '-').trim();
+                const ro = String(row[detectedMap.ro] || row['SUB OUTPUT (RO)'] || '-').trim();
+                const komponen = String(row[detectedMap.komponen] || row['KOMPONEN'] || '-').trim();
+                const sumberDana = String(row[detectedMap.sumberDana] || row['SUMBER DANA'] || 'RM').trim();
+                const akun = String(row[detectedMap.akun] || row['AKUN 6 DIGIT'] || '-').trim();
+                const tahun = parseInt(row[detectedMap.tahun] || row['TAHUN'], 10) || new Date().getFullYear();
+
+                const paguAwal = parseNumber(row[detectedMap.paguAwal] || row['PAGU DIPA AWAL']);
+                let paguRevisi = parseNumber(row[detectedMap.paguRevisi] || row['PAGU DIPA REVISI']);
+                if (paguRevisi === 0 && paguAwal > 0 && !row[detectedMap.paguRevisi]) {
+                    paguRevisi = paguAwal;
+                }
+                const realisasi = parseNumber(row[detectedMap.realisasi] || row['REALISASI BELANJA KL (SAKTI)']);
+                const sisaPagu = Math.max(0, paguRevisi - realisasi);
+                const persenSerapan = paguRevisi > 0 ? (realisasi / paguRevisi) * 100 : 0;
+                const jenisBelanja = getJenisBelanja(akun);
+
+                mapped.push({
+                    KL: kl,
+                    PROGRAM: program,
+                    KEGIATAN: kegiatan,
+                    KRO: kro,
+                    RO: ro,
+                    KOMPONEN: komponen,
+                    SUMBER_DANA: sumberDana,
+                    AKUN: akun,
+                    JENIS_BELANJA: jenisBelanja,
+                    PAGU_AWAL: paguAwal,
+                    PAGU_REVISI: paguRevisi,
+                    REALISASI: realisasi,
+                    SISA_PAGU: sisaPagu,
+                    PERSEN_SERAPAN: persenSerapan,
+                    TAHUN: tahun
+                });
+            }
+            return mapped;
+        };
+
+        const calculateTotals = (data) => {
+            let totalPaguAwal = 0;
+            let totalPaguRevisi = 0;
+            let totalRealisasi = 0;
+
+            const len = data.length;
+            for (let i = 0; i < len; i++) {
+                totalPaguAwal += data[i].PAGU_AWAL;
+                totalPaguRevisi += data[i].PAGU_REVISI;
+                totalRealisasi += data[i].REALISASI;
+            }
+
+            const totalSisaPagu = Math.max(0, totalPaguRevisi - totalRealisasi);
+            const overallPercent = totalPaguRevisi > 0 ? (totalRealisasi / totalPaguRevisi) * 100 : 0;
+            const revisiDelta = totalPaguRevisi - totalPaguAwal;
+            const persenRevisi = totalPaguAwal > 0 ? (revisiDelta / totalPaguAwal) * 100 : 0;
+
+            return {
+                totalPaguAwal,
+                totalPaguRevisi,
+                totalRealisasi,
+                totalSisaPagu,
+                overallPercent,
+                revisiDelta,
+                persenRevisi,
+                rowCount: len
+            };
+        };
+
+        const aggregateByDimension = (data, dimensionKey, metricKey) => {
+            const map = new Map();
+            const len = data.length;
+            for (let i = 0; i < len; i++) {
+                const row = data[i];
+                let key = row[dimensionKey] || 'N/A';
+                if (!map.has(key)) {
+                    map.set(key, { paguAwal: 0, paguRevisi: 0, realisasi: 0, sisaPagu: 0, count: 0 });
+                }
+                const agg = map.get(key);
+                agg.paguAwal += row.PAGU_AWAL;
+                agg.paguRevisi += row.PAGU_REVISI;
+                agg.realisasi += row.REALISASI;
+                agg.sisaPagu += row.SISA_PAGU;
+                agg.count += 1;
+            }
+
+            const results = [];
+            map.forEach((agg, key) => {
+                const persen = agg.paguRevisi > 0 ? (agg.realisasi / agg.paguRevisi) * 100 : 0;
+                let val = 0;
+                if (metricKey === 'REALISASI') val = agg.realisasi;
+                else if (metricKey === 'PAGU_REVISI') val = agg.paguRevisi;
+                else if (metricKey === 'PAGU_AWAL') val = agg.paguAwal;
+                else if (metricKey === 'SISA_PAGU') val = agg.sisaPagu;
+                else if (metricKey === 'PERSEN_SERAPAN') val = persen;
+
+                results.push({
+                    name: key,
+                    value: val,
+                    paguAwal: agg.paguAwal,
+                    paguRevisi: agg.paguRevisi,
+                    realisasi: agg.realisasi,
+                    sisaPagu: agg.sisaPagu,
+                    persenSerapan: persen,
+                    count: agg.count
+                });
+            });
+
+            return results.sort((a, b) => b.value - a.value);
+        };
+
+        const applyFilters = () => {
+            const f = state.activeFilters;
+            const q = f.searchQuery.toLowerCase().trim();
+
+            const hasSelectedPrograms = f.selectedPrograms.size > 0;
+            const hasSelectedKomponens = f.selectedKomponens.size > 0;
+            const hasSelectedKLs = f.selectedKLs.size > 0;
+            const hasSelectedKegiatans = f.selectedKegiatans.size > 0;
+            const hasSelectedSumberDanas = f.selectedSumberDanas.size > 0;
+            const hasSelectedJenisBelanjas = f.selectedJenisBelanjas.size > 0;
+
+            state.filteredData = state.rawData.filter((item) => {
+                if (f.tahun !== 'ALL' && String(item.TAHUN) !== String(f.tahun)) return false;
+
+                if (f.statusSerapan !== 'ALL') {
+                    const p = item.PERSEN_SERAPAN;
+                    if (f.statusSerapan === 'SANGAT_BAIK' && p < 90) return false;
+                    if (f.statusSerapan === 'BAIK' && (p < 75 || p >= 90)) return false;
+                    if (f.statusSerapan === 'SEDANG' && (p < 50 || p >= 75)) return false;
+                    if (f.statusSerapan === 'KRITIS' && p >= 50) return false;
+                }
+
+                if (hasSelectedPrograms) {
+                    if (!f.selectedPrograms.has(item.PROGRAM)) return false;
+                } else if (f.kwProgram) {
+                    if (!matchAllKeywords(item.PROGRAM, f.kwProgram)) return false;
+                }
+
+                if (hasSelectedKomponens) {
+                    if (!f.selectedKomponens.has(item.KOMPONEN)) return false;
+                } else if (f.kwKomponen) {
+                    if (!matchAllKeywords(item.KOMPONEN, f.kwKomponen)) return false;
+                }
+
+                if (hasSelectedKLs) {
+                    if (!f.selectedKLs.has(item.KL)) return false;
+                } else if (f.kwKL) {
+                    if (!matchAllKeywords(item.KL, f.kwKL)) return false;
+                }
+
+                if (hasSelectedKegiatans) {
+                    if (!f.selectedKegiatans.has(item.KEGIATAN)) return false;
+                } else if (f.kwKegiatan) {
+                    if (!matchAllKeywords(item.KEGIATAN, f.kwKegiatan)) return false;
+                }
+
+                if (hasSelectedSumberDanas) {
+                    if (!f.selectedSumberDanas.has(item.SUMBER_DANA)) return false;
+                } else if (f.kwSumberDana) {
+                    if (!matchAllKeywords(item.SUMBER_DANA, f.kwSumberDana)) return false;
+                }
+
+                if (hasSelectedJenisBelanjas) {
+                    if (!f.selectedJenisBelanjas.has(item.JENIS_BELANJA)) return false;
+                } else if (f.kwJenisBelanja) {
+                    if (!matchAllKeywords(item.JENIS_BELANJA, f.kwJenisBelanja) && !matchAllKeywords(item.AKUN, f.kwJenisBelanja)) return false;
+                }
+
+                if (q) {
+                    const text = `${item.KL} ${item.PROGRAM} ${item.KEGIATAN} ${item.KRO} ${item.RO} ${item.KOMPONEN} ${item.AKUN} ${item.SUMBER_DANA}`.toLowerCase();
+                    if (!text.includes(q)) return false;
+                }
+
+                return true;
+            });
+
+            state.tablePagination.currentPage = 1;
+            renderActiveFilterTags();
+            updateDashboardView();
+        };
+
+        const renderActiveFilterTags = () => {
+            const container = document.getElementById('active-filter-tags');
+            const f = state.activeFilters;
+            let tagsHtml = '';
+
+            const makeTag = (label, value, removeFn) => {
+                return `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-[11px]">
+          <span><b>${label}:</b> ${escapeHtml(value)}</span>
+          <button onclick="${removeFn}" class="text-slate-400 hover:text-white font-bold">&times;</button>
+        </span>`;
+            };
+
+            if (f.kwProgram) tagsHtml += makeTag('Program', `"${f.kwProgram}"`, "window.removeFilter('kwProgram')");
+            if (f.selectedPrograms.size > 0) tagsHtml += makeTag('Program', `${f.selectedPrograms.size} Dipilih`, "window.removeFilter('selectedPrograms')");
+
+            if (f.kwKomponen) tagsHtml += makeTag('Komponen', `"${f.kwKomponen}"`, "window.removeFilter('kwKomponen')");
+            if (f.selectedKomponens.size > 0) tagsHtml += makeTag('Komponen', `${f.selectedKomponens.size} Dipilih`, "window.removeFilter('selectedKomponens')");
+
+            if (f.kwKL) tagsHtml += makeTag('K/L', `"${f.kwKL}"`, "window.removeFilter('kwKL')");
+            if (f.selectedKLs.size > 0) tagsHtml += makeTag('K/L', `${f.selectedKLs.size} Dipilih`, "window.removeFilter('selectedKLs')");
+
+            if (f.kwKegiatan) tagsHtml += makeTag('Kegiatan', `"${f.kwKegiatan}"`, "window.removeFilter('kwKegiatan')");
+            if (f.selectedKegiatans.size > 0) tagsHtml += makeTag('Kegiatan', `${f.selectedKegiatans.size} Dipilih`, "window.removeFilter('selectedKegiatans')");
+
+            if (f.kwSumberDana) tagsHtml += makeTag('Sumber Dana', `"${f.kwSumberDana}"`, "window.removeFilter('kwSumberDana')");
+            if (f.selectedSumberDanas.size > 0) tagsHtml += makeTag('Sumber Dana', `${f.selectedSumberDanas.size} Dipilih`, "window.removeFilter('selectedSumberDanas')");
+
+            if (f.kwJenisBelanja) tagsHtml += makeTag('Jenis Belanja', `"${f.kwJenisBelanja}"`, "window.removeFilter('kwJenisBelanja')");
+            if (f.selectedJenisBelanjas.size > 0) tagsHtml += makeTag('Jenis Belanja', `${f.selectedJenisBelanjas.size} Dipilih`, "window.removeFilter('selectedJenisBelanjas')");
+
+            if (f.tahun !== 'ALL') tagsHtml += makeTag('Tahun', f.tahun, "window.removeFilter('tahun')");
+            if (f.statusSerapan !== 'ALL') tagsHtml += makeTag('Status', f.statusSerapan, "window.removeFilter('statusSerapan')");
+            if (f.searchQuery) tagsHtml += makeTag('Cari', `"${f.searchQuery}"`, "window.removeFilter('searchQuery')");
+
+            container.innerHTML = tagsHtml;
+        };
+
+        window.removeFilter = (key) => {
+            if (key === 'selectedPrograms') state.activeFilters.selectedPrograms.clear();
+            else if (key === 'selectedKomponens') state.activeFilters.selectedKomponens.clear();
+            else if (key === 'selectedKLs') state.activeFilters.selectedKLs.clear();
+            else if (key === 'selectedKegiatans') state.activeFilters.selectedKegiatans.clear();
+            else if (key === 'selectedSumberDanas') state.activeFilters.selectedSumberDanas.clear();
+            else if (key === 'selectedJenisBelanjas') state.activeFilters.selectedJenisBelanjas.clear();
+            else if (key === 'tahun') { state.activeFilters.tahun = 'ALL'; document.getElementById('filter-tahun').value = 'ALL'; }
+            else if (key === 'statusSerapan') { state.activeFilters.statusSerapan = 'ALL'; document.getElementById('filter-status-serapan').value = 'ALL'; }
+            else if (key === 'searchQuery') { state.activeFilters.searchQuery = ''; document.getElementById('search-input').value = ''; }
+            else {
+                state.activeFilters[key] = '';
+                if (key === 'kwProgram') document.getElementById('input-search-program').value = '';
+                if (key === 'kwKomponen') document.getElementById('input-search-komponen').value = '';
+                if (key === 'kwKL') document.getElementById('input-search-kl').value = '';
+                if (key === 'kwKegiatan') document.getElementById('input-search-kegiatan').value = '';
+                if (key === 'kwSumberDana') document.getElementById('input-search-sumber-dana').value = '';
+                if (key === 'kwJenisBelanja') document.getElementById('input-search-jenis-belanja').value = '';
+            }
+            updateMultiSelectDropdowns();
+            applyFilters();
+        };
+
+        const renderKPICards = (totals) => {
+            document.getElementById('kpi-total-pagu-awal').textContent = formatCurrency(totals.totalPaguAwal, true);
+            document.getElementById('kpi-total-pagu-awal-sub').textContent = formatCurrency(totals.totalPaguAwal);
+
+            document.getElementById('kpi-total-pagu-revisi').textContent = formatCurrency(totals.totalPaguRevisi, true);
+            document.getElementById('kpi-total-pagu-revisi-sub').textContent = formatCurrency(totals.totalPaguRevisi);
+
+            document.getElementById('kpi-total-realisasi').textContent = formatCurrency(totals.totalRealisasi, true);
+            document.getElementById('kpi-total-realisasi-sub').textContent = formatCurrency(totals.totalRealisasi);
+
+            document.getElementById('kpi-total-sisa').textContent = formatCurrency(totals.totalSisaPagu, true);
+
+            const percentEl = document.getElementById('kpi-persen-serapan');
+            const badgeEl = document.getElementById('kpi-badge-serapan');
+            const progressBar = document.getElementById('kpi-progress-bar');
+
+            const formattedOverall = formatPercent(totals.overallPercent, totals.totalPaguRevisi, totals.totalRealisasi);
+            percentEl.textContent = formattedOverall;
+            progressBar.style.width = `${Math.min(100, Math.max(0, totals.overallPercent))}%`;
+
+            if (totals.overallPercent >= 90) {
+                badgeEl.className = 'px-1.5 py-0.2 text-[9px] sm:text-[10px] font-semibold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                badgeEl.textContent = '≥90% Sangat Baik';
+                progressBar.className = 'h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500';
+            } else if (totals.overallPercent >= 75) {
+                badgeEl.className = 'px-1.5 py-0.2 text-[9px] sm:text-[10px] font-semibold rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30';
+                badgeEl.textContent = '75-89% Baik';
+                progressBar.className = 'h-full bg-gradient-to-r from-blue-500 to-indigo-400 rounded-full transition-all duration-500';
+            } else if (totals.overallPercent >= 50) {
+                badgeEl.className = 'px-1.5 py-0.2 text-[9px] sm:text-[10px] font-semibold rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30';
+                badgeEl.textContent = '50-74% Perhatian';
+                progressBar.className = 'h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full transition-all duration-500';
+            } else {
+                badgeEl.className = 'px-1.5 py-0.2 text-[9px] sm:text-[10px] font-semibold rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30';
+                badgeEl.textContent = '<50% Kritis';
+                progressBar.className = 'h-full bg-gradient-to-r from-rose-500 to-red-600 rounded-full transition-all duration-500';
+            }
+
+            const deviasiEl = document.getElementById('kpi-deviasi-revisi');
+            if (totals.revisiDelta > 0) {
+                deviasiEl.innerHTML = `<span class="text-emerald-400 font-medium">+${formatCurrency(totals.revisiDelta, true)}</span>`;
+            } else if (totals.revisiDelta < 0) {
+                deviasiEl.innerHTML = `<span class="text-rose-400 font-medium">${formatCurrency(totals.revisiDelta, true)}</span>`;
+            } else {
+                deviasiEl.innerHTML = `<span class="text-slate-400 font-medium">Tetap</span>`;
+            }
+
+            document.getElementById('stat-total-baris').textContent = `${totals.rowCount.toLocaleString('id-ID')} Baris`;
+        };
+
+        const populateFilterOptions = () => {
+            const raw = state.rawData;
+            const getUniques = (key) => Array.from(new Set(raw.map((d) => d[key]))).filter(Boolean).sort();
+
+            const tahunEl = document.getElementById('filter-tahun');
+            const years = getUniques('TAHUN');
+            let tahunHtml = '<option value="ALL">Semua</option>';
+            years.forEach(y => {
+                tahunHtml += `<option value="${y}" ${String(y) === String(state.activeFilters.tahun) ? 'selected' : ''}>${y}</option>`;
+            });
+            tahunEl.innerHTML = tahunHtml;
+
+            updateMultiSelectDropdowns();
+        };
+
+        const updateMultiSelectDropdowns = () => {
+            const raw = state.rawData;
+            const getUniques = (key) => Array.from(new Set(raw.map((d) => d[key]))).filter(Boolean).sort();
+
+            const buildList = (key, listElementId, badgeElementId, selectedSet, keyword) => {
+                const listEl = document.getElementById(listElementId);
+                const badgeEl = document.getElementById(badgeElementId);
+                if (!listEl) return;
+
+                const allItems = getUniques(key);
+                const filteredItems = keyword ? allItems.filter(item => matchAllKeywords(item, keyword)) : allItems;
+
+                if (selectedSet.size > 0) {
+                    badgeEl.textContent = `${selectedSet.size} dipilih`;
+                    badgeEl.className = 'text-[10px] text-emerald-400 font-bold font-mono';
+                } else if (keyword) {
+                    badgeEl.textContent = `"${keyword}"`;
+                    badgeEl.className = 'text-[10px] text-amber-400 font-medium truncate max-w-[100px]';
+                } else {
+                    badgeEl.textContent = 'Semua';
+                    badgeEl.className = 'text-[10px] text-indigo-400 font-mono';
+                }
+
+                if (filteredItems.length === 0) {
+                    listEl.innerHTML = `<div class="text-[11px] text-slate-500 py-2 text-center">Tidak ada yang cocok</div>`;
+                    return;
+                }
+
+                let html = '';
+                filteredItems.forEach((item) => {
+                    const isChecked = selectedSet.has(item);
+                    html += `
+            <label class="flex items-start gap-2 p-1.5 rounded hover:bg-slate-800/80 cursor-pointer text-xs text-slate-300 select-none">
+              <input type="checkbox" class="mt-0.5 rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0" data-filter-key="${key}" data-filter-value="${escapeHtml(item)}" ${isChecked ? 'checked' : ''}>
+              <span class="break-words leading-tight text-[11px]">${escapeHtml(item)}</span>
+            </label>
+          `;
+                });
+                listEl.innerHTML = html;
+            };
+
+            buildList('PROGRAM', 'list-items-program', 'badge-count-program', state.activeFilters.selectedPrograms, state.activeFilters.kwProgram);
+            buildList('KOMPONEN', 'list-items-komponen', 'badge-count-komponen', state.activeFilters.selectedKomponens, state.activeFilters.kwKomponen);
+            buildList('KL', 'list-items-kl', 'badge-count-kl', state.activeFilters.selectedKLs, state.activeFilters.kwKL);
+            buildList('KEGIATAN', 'list-items-kegiatan', 'badge-count-kegiatan', state.activeFilters.selectedKegiatans, state.activeFilters.kwKegiatan);
+            buildList('SUMBER_DANA', 'list-items-sumber-dana', 'badge-count-sumber-dana', state.activeFilters.selectedSumberDanas, state.activeFilters.kwSumberDana);
+            buildList('JENIS_BELANJA', 'list-items-jenis-belanja', 'badge-count-jenis-belanja', state.activeFilters.selectedJenisBelanjas, state.activeFilters.kwJenisBelanja);
+        };
+
+        const initCharts = () => {
+            const theme = 'dark';
+            state.charts.customChart = echarts.init(document.getElementById('chart-custom'), theme);
+            state.charts.komparasiChart = echarts.init(document.getElementById('chart-komparasi'), theme);
+            state.charts.drilldownChart = echarts.init(document.getElementById('chart-drilldown'), theme);
+            state.charts.rankingChart = echarts.init(document.getElementById('chart-ranking'), theme);
+            state.charts.trendChart = echarts.init(document.getElementById('chart-trend'), theme);
+
+            window.addEventListener('resize', () => {
+                Object.values(state.charts).forEach((c) => c && c.resize());
+            });
+        };
+
+        const renderCustomChart = () => {
+            const chart = state.charts.customChart;
+            if (!chart) return;
+
+            const { customChartType, customDimension, customMetric } = state.chartConfig;
+            const agg = aggregateByDimension(state.filteredData, customDimension, customMetric);
+            const topData = agg.slice(0, 15);
+            const isMobile = window.innerWidth < 640;
+
+            const metricTitle = {
+                'REALISASI': 'Realisasi Belanja',
+                'PAGU_REVISI': 'Pagu DIPA Revisi',
+                'PAGU_AWAL': 'Pagu DIPA Awal',
+                'SISA_PAGU': 'Sisa Pagu Anggaran',
+                'PERSEN_SERAPAN': '% Serapan Realisasi'
+            }[customMetric] || customMetric;
+
+            let option = {};
+            const baseTooltip = {
+                trigger: customChartType.includes('pie') || customChartType === 'donut' ? 'item' : 'axis',
+                backgroundColor: '#1e293b',
+                borderColor: '#475569',
+                textStyle: { color: '#f8fafc', fontSize: isMobile ? 11 : 12 },
+                formatter: (params) => {
+                    if (Array.isArray(params)) params = params[0];
+                    const val = params.value;
+                    const formatted = customMetric === 'PERSEN_SERAPAN' ? formatPercent(val) : formatCurrency(val);
+                    return `<div class="font-semibold text-indigo-300">${params.name}</div>
+                  <div class="text-xs mt-1">${metricTitle}: <span class="font-bold text-white">${formatted}</span></div>`;
+                }
+            };
+
+            if (customChartType === 'bar') {
+                option = {
+                    backgroundColor: 'transparent',
+                    tooltip: baseTooltip,
+                    grid: { left: '3%', right: '4%', bottom: isMobile ? '25%' : '15%', top: '10%', containLabel: true },
+                    xAxis: {
+                        type: 'category',
+                        data: topData.map((d) => d.name),
+                        axisLabel: {
+                            color: '#94a3b8',
+                            rotate: isMobile ? 45 : 30,
+                            interval: 0,
+                            fontSize: isMobile ? 9 : 11,
+                            formatter: (v) => v.length > 15 ? v.substring(0, 13) + '..' : v
+                        },
+                        axisLine: { lineStyle: { color: '#334155' } }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLabel: {
+                            color: '#94a3b8',
+                            fontSize: isMobile ? 9 : 11,
+                            formatter: (v) => customMetric === 'PERSEN_SERAPAN' ? `${v}%` : formatCurrency(v, true)
+                        },
+                        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+                    },
+                    series: [{
+                        data: topData.map((d) => d.value),
+                        type: 'bar',
+                        barMaxWidth: isMobile ? 24 : 45,
+                        itemStyle: {
+                            borderRadius: [6, 6, 0, 0],
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: '#6366f1' },
+                                { offset: 1, color: '#38bdf8' }
+                            ])
+                        },
+                        label: {
+                            show: !isMobile,
+                            position: 'top',
+                            color: '#cbd5e1',
+                            formatter: (p) => {
+                                if (customMetric === 'PERSEN_SERAPAN') {
+                                    const num = Number(p.value);
+                                    return num >= 99 && num < 100 ? `${num.toFixed(2)}%` : `${num.toFixed(1)}%`;
+                                }
+                                return formatCurrency(p.value, true);
+                            }
+                        }
+                    }]
+                };
+            } else if (customChartType === 'horizontal-bar') {
+                const reversed = [...topData].reverse();
+                option = {
+                    backgroundColor: 'transparent',
+                    tooltip: baseTooltip,
+                    grid: { left: '3%', right: '8%', bottom: '5%', top: '5%', containLabel: true },
+                    xAxis: {
+                        type: 'value',
+                        axisLabel: {
+                            color: '#94a3b8',
+                            fontSize: isMobile ? 9 : 11,
+                            formatter: (v) => customMetric === 'PERSEN_SERAPAN' ? `${v}%` : formatCurrency(v, true)
+                        },
+                        splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: reversed.map((d) => d.name),
+                        axisLabel: {
+                            color: '#94a3b8',
+                            fontSize: isMobile ? 9 : 11,
+                            formatter: (v) => v.length > 20 ? v.substring(0, 18) + '..' : v
+                        },
+                        axisLine: { lineStyle: { color: '#334155' } }
+                    },
+                    series: [{
+                        data: reversed.map((d) => d.value),
+                        type: 'bar',
+                        barMaxWidth: 24,
+                        itemStyle: {
+                            borderRadius: [0, 6, 6, 0],
+                            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                { offset: 0, color: '#8b5cf6' },
+                                { offset: 1, color: '#ec4899' }
+                            ])
+                        },
+                        label: {
+                            show: true,
+                            position: 'right',
+                            color: '#cbd5e1',
+                            fontSize: isMobile ? 9 : 11,
+                            formatter: (p) => {
+                                if (customMetric === 'PERSEN_SERAPAN') {
+                                    const num = Number(p.value);
+                                    return num >= 99 && num < 100 ? `${num.toFixed(2)}%` : `${num.toFixed(1)}%`;
+                                }
+                                return formatCurrency(p.value, true);
+                            }
+                        }
+                    }]
+                };
+            } else if (customChartType === 'pie' || customChartType === 'donut') {
+                const isDonut = customChartType === 'donut';
+                option = {
+                    backgroundColor: 'transparent',
+                    tooltip: baseTooltip,
+                    legend: {
+                        type: 'scroll',
+                        orient: isMobile ? 'horizontal' : 'vertical',
+                        right: isMobile ? 'center' : '5%',
+                        bottom: isMobile ? 0 : 'center',
+                        textStyle: { color: '#94a3b8', fontSize: isMobile ? 9 : 11 },
+                        formatter: (name) => name.length > 18 ? name.substring(0, 16) + '...' : name
+                    },
+                    series: [{
+                        name: metricTitle,
+                        type: 'pie',
+                        radius: isDonut ? ['40%', '68%'] : '65%',
+                        center: isMobile ? ['50%', '42%'] : ['38%', '50%'],
+                        avoidLabelOverlap: true,
+                        itemStyle: { borderRadius: 6, borderColor: '#0f172a', borderWidth: 2 },
+                        label: { show: false },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: 14,
+                                fontWeight: 'bold',
+                                color: '#f8fafc',
+                                formatter: '{b}\n{d}%'
+                            }
+                        },
+                        data: topData.map((d) => ({ name: d.name, value: d.value }))
+                    }]
+                };
+            } else if (customChartType === 'treemap') {
+                option = {
+                    backgroundColor: 'transparent',
+                    tooltip: baseTooltip,
+                    series: [{
+                        type: 'treemap',
+                        leafDepth: 1,
+                        roam: false,
+                        label: {
+                            show: true,
+                            fontSize: isMobile ? 9 : 11,
+                            formatter: '{b}\n' + (customMetric === 'PERSEN_SERAPAN' ? '{c}%' : '')
+                        },
+                        itemStyle: { borderColor: '#0f172a', borderWidth: 2, gapWidth: 2 },
+                        data: topData.map((d) => ({ name: d.name, value: d.value }))
+                    }]
+                };
+            }
+
+            chart.setOption(option, true);
+        };
+
+        const renderKomparasiChart = () => {
+            const chart = state.charts.komparasiChart;
+            if (!chart) return;
+
+            const dim = state.chartConfig.komparasiDimension;
+            const agg = aggregateByDimension(state.filteredData, dim, 'REALISASI').slice(0, 10);
+            const isMobile = window.innerWidth < 640;
+
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    backgroundColor: '#1e293b',
+                    borderColor: '#475569',
+                    textStyle: { color: '#f8fafc', fontSize: isMobile ? 11 : 12 },
+                    formatter: (params) => {
+                        let html = `<div class="font-bold text-indigo-300 pb-1 border-b border-slate-700">${params[0].name}</div>`;
+                        params.forEach((item) => {
+                            html += `<div class="flex items-center justify-between gap-4 text-xs mt-1">
+                        <span style="color:${item.color}">● ${item.seriesName}</span>
+                        <span class="font-bold text-white">${formatCurrency(item.value)}</span>
+                      </div>`;
+                        });
+                        const pagu = params.find((p) => p.seriesName === 'Pagu DIPA Revisi')?.value || 0;
+                        const real = params.find((p) => p.seriesName === 'Realisasi (SAKTI)')?.value || 0;
+                        const pct = pagu > 0 ? (real / pagu) * 100 : 0;
+                        const formattedPct = formatPercent(pct, pagu, real);
+                        html += `<div class="text-xs pt-1 mt-1 border-t border-slate-700 text-right text-emerald-400 font-semibold">% Serapan: ${formattedPct}</div>`;
+                        return html;
+                    }
+                },
+                legend: {
+                    data: ['Pagu DIPA Revisi', 'Realisasi (SAKTI)', 'Sisa Anggaran'],
+                    textStyle: { color: '#cbd5e1', fontSize: isMobile ? 9 : 11 },
+                    top: 0
+                },
+                grid: { left: '3%', right: '3%', bottom: isMobile ? '25%' : '15%', top: '15%', containLabel: true },
+                xAxis: {
+                    type: 'category',
+                    data: agg.map((d) => d.name),
+                    axisLabel: {
+                        color: '#94a3b8',
+                        rotate: isMobile ? 45 : 25,
+                        interval: 0,
+                        fontSize: isMobile ? 9 : 11,
+                        formatter: (v) => v.length > 15 ? v.substring(0, 13) + '..' : v
+                    },
+                    axisLine: { lineStyle: { color: '#334155' } }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        color: '#94a3b8',
+                        fontSize: isMobile ? 9 : 11,
+                        formatter: (v) => formatCurrency(v, true)
+                    },
+                    splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+                },
+                series: [
+                    { name: 'Pagu DIPA Revisi', type: 'bar', data: agg.map((d) => d.paguRevisi), itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] }, barMaxWidth: isMobile ? 14 : 25 },
+                    { name: 'Realisasi (SAKTI)', type: 'bar', data: agg.map((d) => d.realisasi), itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] }, barMaxWidth: isMobile ? 14 : 25 },
+                    { name: 'Sisa Anggaran', type: 'bar', data: agg.map((d) => d.sisaPagu), itemStyle: { color: '#f59e0b', borderRadius: [4, 4, 0, 0] }, barMaxWidth: isMobile ? 14 : 25 }
+                ]
+            };
+            chart.setOption(option, true);
+        };
+
+        // UPGRADED CARD 1: Support Donut (Kue) Chart per Jenis Belanja & Sumber Dana, or Sunburst / Treemap
+        const renderDrilldownChart = () => {
+            const chart = state.charts.drilldownChart;
+            if (!chart) return;
+
+            const type = state.chartConfig.drilldownType;
+            const isMobile = window.innerWidth < 640;
+
+            if (type === 'donut' || type === 'donut-dana') {
+                const dim = type === 'donut-dana' ? 'SUMBER_DANA' : 'JENIS_BELANJA';
+                const agg = aggregateByDimension(state.filteredData, dim, 'REALISASI');
+                const top = agg.slice(0, 8);
+
+                const option = {
+                    backgroundColor: 'transparent',
+                    tooltip: {
+                        trigger: 'item',
+                        backgroundColor: '#1e293b',
+                        borderColor: '#475569',
+                        textStyle: { color: '#f8fafc', fontSize: isMobile ? 11 : 12 },
+                        formatter: (params) => {
+                            return `<div class="font-bold text-indigo-300">${params.name}</div>
+                      <div class="text-xs text-white mt-1">Realisasi: <b>${formatCurrency(params.value)}</b> (${params.percent.toFixed(2)}%)</div>`;
+                        }
+                    },
+                    legend: {
+                        type: 'scroll',
+                        orient: isMobile ? 'horizontal' : 'vertical',
+                        right: isMobile ? 'center' : '3%',
+                        bottom: isMobile ? 0 : 'center',
+                        textStyle: { color: '#94a3b8', fontSize: isMobile ? 9 : 10 },
+                        formatter: (name) => name.length > 20 ? name.substring(0, 18) + '...' : name
+                    },
+                    series: [{
+                        name: 'Realisasi Belanja',
+                        type: 'pie',
+                        radius: ['40%', '72%'],
+                        center: isMobile ? ['50%', '42%'] : ['35%', '50%'],
+                        avoidLabelOverlap: true,
+                        itemStyle: {
+                            borderRadius: 6,
+                            borderColor: '#0f172a',
+                            borderWidth: 2
+                        },
+                        label: {
+                            show: false,
+                            position: 'center'
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: 13,
+                                fontWeight: 'bold',
+                                color: '#f8fafc',
+                                formatter: '{b}\n{d}%'
+                            }
+                        },
+                        data: top.map(d => ({ name: d.name, value: d.value }))
+                    }]
+                };
+                chart.setOption(option, true);
+                return;
+            }
+
+            if (type === 'treemap') {
+                const agg = aggregateByDimension(state.filteredData, 'JENIS_BELANJA', 'REALISASI');
+                const option = {
+                    backgroundColor: 'transparent',
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        borderColor: '#475569',
+                        textStyle: { color: '#f8fafc' },
+                        formatter: (p) => `<div class="font-bold text-indigo-300">${p.name}</div><div class="text-xs text-white mt-1">Realisasi: ${formatCurrency(p.value)}</div>`
+                    },
+                    series: [{
+                        type: 'treemap',
+                        leafDepth: 1,
+                        roam: false,
+                        label: { show: true, fontSize: isMobile ? 9 : 11 },
+                        itemStyle: { borderColor: '#0f172a', borderWidth: 2, gapWidth: 2 },
+                        data: agg.map(d => ({ name: d.name, value: d.value }))
+                    }]
+                };
+                chart.setOption(option, true);
+                return;
+            }
+
+            // Default: Sunburst Hierarki (Limit top items so it doesn't get overcrowded with 450k rows)
+            const tree = {};
+            const data = state.filteredData;
+            const len = data.length;
+
+            for (let i = 0; i < len; i++) {
+                const row = data[i];
+                const kl = row.KL || 'K/L';
+                const prog = row.PROGRAM || 'Program';
+                const jns = row.JENIS_BELANJA || 'Belanja';
+
+                if (!tree[kl]) tree[kl] = {};
+                if (!tree[kl][prog]) tree[kl][prog] = {};
+                if (!tree[kl][prog][jns]) tree[kl][prog][jns] = 0;
+                tree[kl][prog][jns] += row.REALISASI;
+            }
+
+            // Keep top 6 KLs only for clean sunburst
+            const klKeys = Object.keys(tree).sort((a, b) => {
+                const sumA = Object.values(tree[a]).reduce((acc, p) => acc + Object.values(p).reduce((x, y) => x + y, 0), 0);
+                const sumB = Object.values(tree[b]).reduce((acc, p) => acc + Object.values(p).reduce((x, y) => x + y, 0), 0);
+                return sumB - sumA;
+            }).slice(0, 6);
+
+            const sunburstData = [];
+            klKeys.forEach((kl) => {
+                const progNodes = [];
+                const progs = Object.keys(tree[kl]).slice(0, 5);
+                progs.forEach((prog) => {
+                    const jnsNodes = [];
+                    Object.keys(tree[kl][prog]).forEach((jns) => {
+                        jnsNodes.push({ name: jns.substring(0, 16), value: tree[kl][prog][jns] });
+                    });
+                    progNodes.push({ name: prog.length > 20 ? prog.substring(0, 18) + '..' : prog, children: jnsNodes });
+                });
+                sunburstData.push({ name: kl.length > 25 ? kl.substring(0, 23) + '..' : kl, children: progNodes });
+            });
+
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: '#1e293b',
+                    borderColor: '#475569',
+                    textStyle: { color: '#f8fafc', fontSize: 11 },
+                    formatter: (params) => `<div class="font-bold text-indigo-300">${params.name}</div><div class="text-xs text-white mt-1">Realisasi: <b>${formatCurrency(params.value)}</b></div>`
+                },
+                series: [{
+                    type: 'sunburst',
+                    data: sunburstData,
+                    radius: ['15%', '85%'],
+                    levels: [
+                        {},
+                        { r0: '15%', r: '40%', itemStyle: { borderWidth: 2, borderColor: '#0f172a' }, label: { rotate: 'tangential', color: '#f8fafc', fontSize: 10 } },
+                        { r0: '40%', r: '68%', itemStyle: { borderWidth: 1, borderColor: '#0f172a' }, label: { align: 'right', color: '#cbd5e1', fontSize: 9 } },
+                        { r0: '68%', r: '88%', label: { position: 'outside', padding: 2, color: '#94a3b8', fontSize: 8 }, itemStyle: { borderWidth: 1, borderColor: '#0f172a' } }
+                    ]
+                }]
+            };
+            chart.setOption(option, true);
+        };
+
+        // UPGRADED CARD 2: Evaluasi Serapan Kegiatan with PRECISE Decimals (e.g. 99.95% instead of 100%)
+        const renderRankingChart = () => {
+            const chart = state.charts.rankingChart;
+            if (!chart) return;
+
+            const agg = aggregateByDimension(state.filteredData, 'KEGIATAN', 'PERSEN_SERAPAN').filter((d) => d.paguRevisi > 0);
+            const bottom5 = agg.slice(-5).reverse();
+            const top5 = agg.slice(0, 5);
+            const combined = [...bottom5, ...top5];
+            const isMobile = window.innerWidth < 640;
+
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    backgroundColor: '#1e293b',
+                    borderColor: '#475569',
+                    textStyle: { color: '#f8fafc', fontSize: 11 },
+                    formatter: (params) => {
+                        const item = combined[params[0].dataIndex];
+                        const accuratePct = formatPercent(item.persenSerapan, item.paguRevisi, item.realisasi);
+                        return `<div class="font-bold text-indigo-300">${item.name}</div>
+                    <div class="text-xs text-white mt-1">% Serapan: <b class="${item.persenSerapan >= 90 ? 'text-emerald-400' : (item.persenSerapan < 50 ? 'text-rose-400' : 'text-amber-400')}">${accuratePct}</b></div>
+                    <div class="text-xs text-slate-300">Pagu: ${formatCurrency(item.paguRevisi)}</div>
+                    <div class="text-xs text-slate-300">Realisasi: ${formatCurrency(item.realisasi)}</div>
+                    <div class="text-xs text-amber-300">Sisa Pagu: ${formatCurrency(item.sisaPagu)}</div>`;
+                    }
+                },
+                grid: { left: '3%', right: '14%', bottom: '5%', top: '8%', containLabel: true },
+                xAxis: {
+                    type: 'value',
+                    max: 100,
+                    axisLabel: { color: '#94a3b8', formatter: '{value}%', fontSize: 10 },
+                    splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: combined.map((d) => d.name.length > 18 ? d.name.substring(0, 16) + '..' : d.name),
+                    axisLabel: { color: '#94a3b8', fontSize: isMobile ? 9 : 11 },
+                    axisLine: { lineStyle: { color: '#334155' } }
+                },
+                series: [{
+                    name: '% Serapan',
+                    type: 'bar',
+                    barMaxWidth: 18,
+                    data: combined.map((d) => ({
+                        value: d.persenSerapan,
+                        paguRevisi: d.paguRevisi,
+                        realisasi: d.realisasi,
+                        itemStyle: {
+                            color: d.persenSerapan >= 90 ? '#10b981' : (d.persenSerapan >= 75 ? '#3b82f6' : (d.persenSerapan >= 50 ? '#f59e0b' : '#f43f5e')),
+                            borderRadius: [0, 4, 4, 0]
+                        }
+                    })),
+                    label: {
+                        show: true,
+                        position: 'right',
+                        color: '#cbd5e1',
+                        fontSize: isMobile ? 9 : 10,
+                        formatter: (p) => {
+                            const num = Number(p.value);
+                            const dataObj = p.data;
+                            if (dataObj && dataObj.paguRevisi > 0 && dataObj.realisasi < dataObj.paguRevisi && num >= 99.99) {
+                                return '99.99%';
+                            }
+                            if (num < 100 && num >= 99) {
+                                return `${num.toFixed(2)}%`;
+                            }
+                            return `${num.toFixed(1)}%`;
+                        }
+                    }
+                }]
+            };
+            chart.setOption(option, true);
+        };
+
+        const renderTrendChart = () => {
+            const chart = state.charts.trendChart;
+            if (!chart) return;
+
+            const years = Array.from(new Set(state.rawData.map((d) => d.TAHUN))).sort((a, b) => a - b);
+            const paguList = [];
+            const realisasiList = [];
+            const pctList = [];
+            const isMobile = window.innerWidth < 640;
+
+            years.forEach((yr) => {
+                const yearSubset = state.filteredData.filter((d) => d.TAHUN === yr);
+                const totals = calculateTotals(yearSubset);
+                paguList.push(totals.totalPaguRevisi);
+                realisasiList.push(totals.totalRealisasi);
+                pctList.push(totals.overallPercent.toFixed(2));
+            });
+
+            const option = {
+                backgroundColor: 'transparent',
+                tooltip: { trigger: 'axis', backgroundColor: '#1e293b', borderColor: '#475569', textStyle: { color: '#f8fafc', fontSize: 11 } },
+                legend: { data: ['Pagu Revisi', 'Realisasi', '% Serapan'], textStyle: { color: '#cbd5e1', fontSize: isMobile ? 9 : 11 }, top: 0 },
+                grid: { left: '3%', right: '5%', bottom: '8%', top: '18%', containLabel: true },
+                xAxis: { type: 'category', data: years.map(String), axisLabel: { color: '#94a3b8', fontSize: 10 }, axisLine: { lineStyle: { color: '#334155' } } },
+                yAxis: [
+                    { type: 'value', name: 'Nominal', axisLabel: { color: '#94a3b8', fontSize: 9, formatter: (v) => formatCurrency(v, true) }, splitLine: { lineStyle: { color: '#1e293b', type: 'dashed' } } },
+                    { type: 'value', name: '%', max: 100, axisLabel: { color: '#94a3b8', fontSize: 9, formatter: '{value}%' }, splitLine: { show: false } }
+                ],
+                series: [
+                    { name: 'Pagu Revisi', type: 'bar', data: paguList, itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] }, barMaxWidth: 25 },
+                    { name: 'Realisasi', type: 'bar', data: realisasiList, itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] }, barMaxWidth: 25 },
+                    { name: '% Serapan', type: 'line', yAxisIndex: 1, data: pctList, itemStyle: { color: '#f59e0b' }, lineStyle: { width: 2.5 } }
+                ]
+            };
+            chart.setOption(option, true);
+        };
+
+        const renderDataTable = () => {
+            const tableBody = document.getElementById('table-body');
+            const pageInfo = document.getElementById('table-page-info');
+            const paginationControls = document.getElementById('table-pagination-controls');
+
+            const data = [...state.filteredData];
+            const { currentPage, pageSize, sortColumn, sortDirection } = state.tablePagination;
+
+            data.sort((a, b) => {
+                let valA = a[sortColumn];
+                let valB = b[sortColumn];
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+                if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+                if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            const totalRows = data.length;
+            const totalPages = Math.ceil(totalRows / pageSize) || 1;
+            const validPage = Math.min(Math.max(1, currentPage), totalPages);
+            state.tablePagination.currentPage = validPage;
+
+            const startIdx = (validPage - 1) * pageSize;
+            const endIdx = Math.min(startIdx + pageSize, totalRows);
+            const pageRows = data.slice(startIdx, endIdx);
+
+            pageInfo.textContent = `Menampilkan ${totalRows > 0 ? startIdx + 1 : 0} - ${endIdx} dari ${totalRows.toLocaleString('id-ID')} data`;
+
+            if (pageRows.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-400">Tidak ada data yang sesuai filter.</td></tr>`;
+                paginationControls.innerHTML = '';
+                return;
+            }
+
+            let rowsHtml = '';
+            pageRows.forEach((row, idx) => {
+                const pct = row.PERSEN_SERAPAN;
+                let badgeClass = 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+                if (pct >= 90) badgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+                else if (pct >= 75) badgeClass = 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+                else if (pct >= 50) badgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+
+                rowsHtml += `
+          <tr class="border-b border-slate-800 hover:bg-slate-800/50 transition-colors text-[11px] sm:text-xs text-slate-300">
+            <td class="px-2.5 py-2 text-center font-mono text-slate-400">${startIdx + idx + 1}</td>
+            <td class="px-2.5 py-2 font-mono text-center text-indigo-300">${row.TAHUN}</td>
+            <td class="px-2.5 py-2 font-medium text-white max-w-[150px] sm:max-w-[200px] truncate" title="${escapeHtml(row.KL)}">${escapeHtml(row.KL)}</td>
+            <td class="px-2.5 py-2 max-w-[180px] sm:max-w-[220px] truncate" title="${escapeHtml(row.PROGRAM)} / ${escapeHtml(row.KEGIATAN)}">
+              <div class="font-medium text-slate-200 truncate">${escapeHtml(row.PROGRAM)}</div>
+              <div class="text-[10px] text-slate-400 truncate">${escapeHtml(row.KEGIATAN)}</div>
+            </td>
+            <td class="px-2.5 py-2 max-w-[150px] sm:max-w-[180px] truncate" title="${escapeHtml(row.KOMPONEN)}">
+              <div class="truncate text-slate-300 font-medium">${escapeHtml(row.KOMPONEN)}</div>
+              <span class="inline-block px-1 text-[9px] rounded bg-slate-700 text-slate-300">${escapeHtml(row.SUMBER_DANA)}</span>
+            </td>
+            <td class="px-2.5 py-2 text-right font-mono text-slate-400">${formatCurrency(row.PAGU_AWAL, true)}</td>
+            <td class="px-2.5 py-2 text-right font-mono text-indigo-300 font-medium">${formatCurrency(row.PAGU_REVISI, true)}</td>
+            <td class="px-2.5 py-2 text-right font-mono text-emerald-400 font-bold">${formatCurrency(row.REALISASI, true)}</td>
+            <td class="px-2.5 py-2 text-center">
+              <div class="inline-flex items-center px-1.5 py-0.2 rounded-full border text-[10px] font-semibold ${badgeClass}">
+                <span>${formatPercent(pct, row.PAGU_REVISI, row.REALISASI)}</span>
+              </div>
+            </td>
+          </tr>
+        `;
+            });
+            tableBody.innerHTML = rowsHtml;
+
+            let pagHtml = `
+        <button id="btn-prev-page" class="px-2 py-1 text-[11px] rounded bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-40" ${validPage <= 1 ? 'disabled' : ''}>←</button>
+        <span class="text-[10px] text-slate-400 font-mono">${validPage}/${totalPages}</span>
+        <button id="btn-next-page" class="px-2 py-1 text-[11px] rounded bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-40" ${validPage >= totalPages ? 'disabled' : ''}>→</button>
+      `;
+            paginationControls.innerHTML = pagHtml;
+
+            document.getElementById('btn-prev-page')?.addEventListener('click', () => {
+                if (state.tablePagination.currentPage > 1) {
+                    state.tablePagination.currentPage--;
+                    renderDataTable();
+                }
+            });
+            document.getElementById('btn-next-page')?.addEventListener('click', () => {
+                if (state.tablePagination.currentPage < totalPages) {
+                    state.tablePagination.currentPage++;
+                    renderDataTable();
+                }
+            });
+        };
+
+        const updateDashboardView = () => {
+            const totals = calculateTotals(state.filteredData);
+            renderKPICards(totals);
+            renderCustomChart();
+            renderKomparasiChart();
+            renderDrilldownChart();
+            renderRankingChart();
+            renderTrendChart();
+            renderDataTable();
+        };
+
+        const handleFileUpload = (file) => {
+            if (!file) return;
+
+            const progressModal = document.getElementById('upload-progress-modal');
+            const progressText = document.getElementById('upload-progress-text');
+            if (progressModal) progressModal.classList.remove('hidden');
+
+            const fileName = file.name;
+            const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+
+            if (isExcel) {
+                if (progressText) progressText.textContent = 'Membaca file Excel... Mohon tunggu.';
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.SheetNames[0];
+                        const rawJson = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
+
+                        if (!rawJson || rawJson.length === 0) {
+                            alert('File Excel kosong atau format tidak terbaca.');
+                            if (progressModal) progressModal.classList.add('hidden');
+                            return;
+                        }
+
+                        const headers = Object.keys(rawJson[0]);
+                        const detected = detectColumns(headers);
+                        state.columnMapping = detected;
+                        state.rawData = processRawRecords(rawJson, detected);
+
+                        if (progressModal) progressModal.classList.add('hidden');
+                        onDataLoadedSuccessfully(fileName, state.rawData.length);
+                    } catch (err) {
+                        console.error(err);
+                        alert('Gagal memproses file Excel: ' + err.message);
+                        if (progressModal) progressModal.classList.add('hidden');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                let parsedRows = [];
+                let totalParsed = 0;
+
+                Papa.parse(file, {
+                    header: true,
+                    dynamicTyping: false,
+                    skipEmptyLines: true,
+                    chunk: function (results) {
+                        totalParsed += results.data.length;
+                        parsedRows = parsedRows.concat(results.data);
+                        if (progressText) {
+                            progressText.textContent = `Memproses ${totalParsed.toLocaleString('id-ID')} baris data...`;
+                        }
+                    },
+                    complete: function () {
+                        if (parsedRows.length === 0) {
+                            alert('File CSV kosong.');
+                            if (progressModal) progressModal.classList.add('hidden');
+                            return;
+                        }
+                        const headers = Object.keys(parsedRows[0]);
+                        const detected = detectColumns(headers);
+                        state.columnMapping = detected;
+                        state.rawData = processRawRecords(parsedRows, detected);
+
+                        if (progressModal) progressModal.classList.add('hidden');
+                        onDataLoadedSuccessfully(fileName, state.rawData.length);
+                    },
+                    error: function (err) {
+                        console.error(err);
+                        alert('Gagal membaca file CSV: ' + err.message);
+                        if (progressModal) progressModal.classList.add('hidden');
+                    }
+                });
+            }
+        };
+
+        const handleTextPaste = (text) => {
+            if (!text || !text.trim()) {
+                alert('Teks kosong.');
+                return;
+            }
+            const parsed = Papa.parse(text.trim(), {
+                header: true,
+                delimiter: text.includes('\t') ? '\t' : '',
+                skipEmptyLines: true
+            });
+
+            if (!parsed.data || parsed.data.length === 0) {
+                alert('Format teks tidak dapat di-parse.');
+                return;
+            }
+
+            const headers = Object.keys(parsed.data[0]);
+            const detected = detectColumns(headers);
+            state.columnMapping = detected;
+            state.rawData = processRawRecords(parsed.data, detected);
+            onDataLoadedSuccessfully('Data Hasil Paste', state.rawData.length);
+        };
+
+        const onDataLoadedSuccessfully = (name, count) => {
+            document.getElementById('dataset-name-label').textContent = `${name} (${count.toLocaleString('id-ID')} Baris)`;
+            state.activeFilters = {
+                tahun: 'ALL',
+                statusSerapan: 'ALL',
+                searchQuery: '',
+                kwProgram: '',
+                kwKomponen: '',
+                kwKL: '',
+                kwKegiatan: '',
+                kwSumberDana: '',
+                kwJenisBelanja: '',
+                selectedPrograms: new Set(),
+                selectedKomponens: new Set(),
+                selectedKLs: new Set(),
+                selectedKegiatans: new Set(),
+                selectedSumberDanas: new Set(),
+                selectedJenisBelanjas: new Set()
+            };
+
+            document.getElementById('input-search-program').value = '';
+            document.getElementById('input-search-komponen').value = '';
+            document.getElementById('input-search-kl').value = '';
+            document.getElementById('input-search-kegiatan').value = '';
+            document.getElementById('input-search-sumber-dana').value = '';
+            document.getElementById('input-search-jenis-belanja').value = '';
+            document.getElementById('search-input').value = '';
+            document.getElementById('filter-status-serapan').value = 'ALL';
+
+            populateFilterOptions();
+            applyFilters();
+            showToast(`Berhasil memuat dataset: ${name} (${count.toLocaleString('id-ID')} baris)!`);
+        };
+
+        const showToast = (msg) => {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 z-50 px-3.5 py-2.5 rounded-lg bg-indigo-600 text-white font-medium shadow-2xl flex items-center gap-2 transition-all transform text-xs';
+            toast.innerHTML = `<svg class="w-4 h-4 text-emerald-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg> <span>${escapeHtml(msg)}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        };
+
+        const exportToExcel = () => {
+            const data = state.filteredData;
+            if (!data || data.length === 0) {
+                alert('Tidak ada data untuk diekspor.');
+                return;
+            }
+            const exportRows = data.map((d, i) => ({
+                'No': i + 1,
+                'Tahun': d.TAHUN,
+                'Kementerian / Lembaga': d.KL,
+                'Program': d.PROGRAM,
+                'Kegiatan': d.KEGIATAN,
+                'Output (KRO)': d.KRO,
+                'Sub Output (RO)': d.RO,
+                'Komponen': d.KOMPONEN,
+                'Sumber Dana': d.SUMBER_DANA,
+                'Jenis Belanja': d.JENIS_BELANJA,
+                'Akun 6 Digit': d.AKUN,
+                'Pagu Awal': d.PAGU_AWAL,
+                'Pagu Revisi': d.PAGU_REVISI,
+                'Realisasi (SAKTI)': d.REALISASI,
+                'Sisa Pagu': d.SISA_PAGU,
+                '% Serapan': `${d.PERSEN_SERAPAN.toFixed(2)}%`
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportRows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Filtered_Data_Anggaran');
+            XLSX.writeFile(wb, `Laporan_Realisasi_Anggaran_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        };
+
+        const setupEventListeners = () => {
+            const dropzone = document.getElementById('file-dropzone');
+            const fileInput = document.getElementById('file-input');
+
+            if (dropzone && fileInput) {
+                dropzone.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files && e.target.files[0]) {
+                        handleFileUpload(e.target.files[0]);
+                    }
+                });
+
+                ['dragenter', 'dragover'].forEach((eventName) => {
+                    dropzone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        dropzone.classList.add('drag-active');
+                    });
+                });
+
+                ['dragleave', 'drop'].forEach((eventName) => {
+                    dropzone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        dropzone.classList.remove('drag-active');
+                    });
+                });
+
+                dropzone.addEventListener('drop', (e) => {
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        handleFileUpload(e.dataTransfer.files[0]);
+                    }
+                });
+            }
+
+            // Paste Modal
+            const pasteModal = document.getElementById('paste-modal');
+            const pasteTextarea = document.getElementById('paste-textarea');
+            document.getElementById('btn-paste-modal')?.addEventListener('click', () => {
+                pasteModal.classList.remove('hidden');
+                pasteTextarea.value = '';
+                pasteTextarea.focus();
+            });
+            document.getElementById('btn-close-paste-modal')?.addEventListener('click', () => pasteModal.classList.add('hidden'));
+            document.getElementById('btn-cancel-paste')?.addEventListener('click', () => pasteModal.classList.add('hidden'));
+            document.getElementById('btn-submit-paste')?.addEventListener('click', () => {
+                const text = pasteTextarea.value;
+                if (text) {
+                    handleTextPaste(text);
+                    pasteModal.classList.add('hidden');
+                }
+            });
+
+            // Mobile Filter Toggle
+            const filterContainer = document.getElementById('filter-controls-container');
+            document.getElementById('btn-toggle-filter-mobile')?.addEventListener('click', () => {
+                filterContainer.classList.toggle('hidden');
+            });
+
+            // Setup MultiSelect Helpers
+            const setupMultiSelectHelper = (name, key, stateKeyKw, stateKeySet) => {
+                const inputEl = document.getElementById(`input-search-${name}`);
+                const toggleBtn = document.getElementById(`btn-toggle-${name}-dropdown`);
+                const dropdownEl = document.getElementById(`dropdown-${name}`);
+                const selectAllBtn = document.getElementById(`btn-select-all-${name}`);
+                const clearBtn = document.getElementById(`btn-clear-${name}`);
+
+                const toggleDropdown = () => {
+                    const isHidden = dropdownEl.classList.contains('hidden');
+                    document.querySelectorAll('.dropdown-menu-custom').forEach(el => el.classList.add('hidden'));
+                    if (isHidden) dropdownEl.classList.remove('hidden');
+                };
+
+                toggleBtn?.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleDropdown();
+                });
+
+                let debounceTimer;
+                inputEl?.addEventListener('input', (e) => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        state.activeFilters[stateKeyKw] = e.target.value;
+                        state.activeFilters[stateKeySet].clear();
+                        updateMultiSelectDropdowns();
+                        applyFilters();
+                    }, 150);
+                });
+
+                inputEl?.addEventListener('focus', () => {
+                    dropdownEl.classList.remove('hidden');
+                });
+
+                selectAllBtn?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const checkboxes = dropdownEl.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(cb => {
+                        cb.checked = true;
+                        state.activeFilters[stateKeySet].add(cb.getAttribute('data-filter-value'));
+                    });
+                    updateMultiSelectDropdowns();
+                    applyFilters();
+                });
+
+                clearBtn?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    state.activeFilters[stateKeySet].clear();
+                    state.activeFilters[stateKeyKw] = '';
+                    if (inputEl) inputEl.value = '';
+                    updateMultiSelectDropdowns();
+                    applyFilters();
+                });
+            };
+
+            setupMultiSelectHelper('program', 'PROGRAM', 'kwProgram', 'selectedPrograms');
+            setupMultiSelectHelper('komponen', 'KOMPONEN', 'kwKomponen', 'selectedKomponens');
+            setupMultiSelectHelper('kl', 'KL', 'kwKL', 'selectedKLs');
+            setupMultiSelectHelper('kegiatan', 'KEGIATAN', 'kwKegiatan', 'selectedKegiatans');
+            setupMultiSelectHelper('sumber-dana', 'SUMBER_DANA', 'kwSumberDana', 'selectedSumberDanas');
+            setupMultiSelectHelper('jenis-belanja', 'JENIS_BELANJA', 'kwJenisBelanja', 'selectedJenisBelanjas');
+
+            document.addEventListener('change', (e) => {
+                if (e.target && e.target.matches('input[data-filter-key]')) {
+                    const key = e.target.getAttribute('data-filter-key');
+                    const val = e.target.getAttribute('data-filter-value');
+                    const isChecked = e.target.checked;
+
+                    let setObj = null;
+                    if (key === 'PROGRAM') setObj = state.activeFilters.selectedPrograms;
+                    else if (key === 'KOMPONEN') setObj = state.activeFilters.selectedKomponens;
+                    else if (key === 'KL') setObj = state.activeFilters.selectedKLs;
+                    else if (key === 'KEGIATAN') setObj = state.activeFilters.selectedKegiatans;
+                    else if (key === 'SUMBER_DANA') setObj = state.activeFilters.selectedSumberDanas;
+                    else if (key === 'JENIS_BELANJA') setObj = state.activeFilters.selectedJenisBelanjas;
+
+                    if (setObj) {
+                        if (isChecked) setObj.add(val);
+                        else setObj.delete(val);
+                        updateMultiSelectDropdowns();
+                        applyFilters();
+                    }
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#wrapper-filter-program') &&
+                    !e.target.closest('#wrapper-filter-komponen') &&
+                    !e.target.closest('#wrapper-filter-kl') &&
+                    !e.target.closest('#wrapper-filter-kegiatan') &&
+                    !e.target.closest('#wrapper-filter-sumber-dana') &&
+                    !e.target.closest('#wrapper-filter-jenis-belanja')) {
+                    document.querySelectorAll('.dropdown-menu-custom').forEach(el => el.classList.add('hidden'));
+                }
+            });
+
+            document.getElementById('filter-tahun')?.addEventListener('change', (e) => {
+                state.activeFilters.tahun = e.target.value;
+                applyFilters();
+            });
+
+            document.getElementById('filter-status-serapan')?.addEventListener('change', (e) => {
+                state.activeFilters.statusSerapan = e.target.value;
+                applyFilters();
+            });
+
+            // Card 1 Selector (Donut Belanja, Donut Dana, Sunburst, Treemap)
+            document.getElementById('drilldown-type-selector')?.addEventListener('change', (e) => {
+                state.chartConfig.drilldownType = e.target.value;
+                renderDrilldownChart();
+            });
+
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                let timer;
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => {
+                        state.activeFilters.searchQuery = e.target.value;
+                        applyFilters();
+                    }, 200);
+                });
+            }
+
+            document.getElementById('btn-reset-filters')?.addEventListener('click', () => {
+                state.activeFilters = {
+                    tahun: 'ALL',
+                    statusSerapan: 'ALL',
+                    searchQuery: '',
+                    kwProgram: '',
+                    kwKomponen: '',
+                    kwKL: '',
+                    kwKegiatan: '',
+                    kwSumberDana: '',
+                    kwJenisBelanja: '',
+                    selectedPrograms: new Set(),
+                    selectedKomponens: new Set(),
+                    selectedKLs: new Set(),
+                    selectedKegiatans: new Set(),
+                    selectedSumberDanas: new Set(),
+                    selectedJenisBelanjas: new Set()
+                };
+                document.getElementById('input-search-program').value = '';
+                document.getElementById('input-search-komponen').value = '';
+                document.getElementById('input-search-kl').value = '';
+                document.getElementById('input-search-kegiatan').value = '';
+                document.getElementById('input-search-sumber-dana').value = '';
+                document.getElementById('input-search-jenis-belanja').value = '';
+                document.getElementById('search-input').value = '';
+                document.getElementById('filter-tahun').value = 'ALL';
+                document.getElementById('filter-status-serapan').value = 'ALL';
+                updateMultiSelectDropdowns();
+                applyFilters();
+            });
+
+            document.getElementById('chart-type-selector')?.addEventListener('change', (e) => {
+                state.chartConfig.customChartType = e.target.value;
+                renderCustomChart();
+            });
+            document.getElementById('chart-dimension-selector')?.addEventListener('change', (e) => {
+                state.chartConfig.customDimension = e.target.value;
+                renderCustomChart();
+            });
+            document.getElementById('chart-metric-selector')?.addEventListener('change', (e) => {
+                state.chartConfig.customMetric = e.target.value;
+                renderCustomChart();
+            });
+
+            document.getElementById('komparasi-dimension-selector')?.addEventListener('change', (e) => {
+                state.chartConfig.komparasiDimension = e.target.value;
+                renderKomparasiChart();
+            });
+
+            document.getElementById('table-page-size')?.addEventListener('change', (e) => {
+                state.tablePagination.pageSize = parseInt(e.target.value, 10);
+                renderDataTable();
+            });
+
+            document.querySelectorAll('[data-sort]').forEach((th) => {
+                th.addEventListener('click', () => {
+                    const col = th.getAttribute('data-sort');
+                    if (state.tablePagination.sortColumn === col) {
+                        state.tablePagination.sortDirection = state.tablePagination.sortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        state.tablePagination.sortColumn = col;
+                        state.tablePagination.sortDirection = 'desc';
+                    }
+                    renderDataTable();
+                });
+            });
+
+            document.getElementById('btn-export-excel')?.addEventListener('click', exportToExcel);
+            document.getElementById('btn-print-report')?.addEventListener('click', () => window.print());
+
+            document.getElementById('btn-load-sample')?.addEventListener('click', () => {
+                state.rawData = processRawRecords(DEFAULT_SAMPLE_DATA, state.columnMapping);
+                onDataLoadedSuccessfully('Sample Data APBN K/L', state.rawData.length);
+            });
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            setupEventListeners();
+
+            state.rawData = processRawRecords(DEFAULT_SAMPLE_DATA, state.columnMapping);
+            populateFilterOptions();
+            applyFilters();
+            document.getElementById('dataset-name-label').textContent = `Sample Data APBN (${state.rawData.length} Baris)`;
+        });
+    </script>
+</body>
+
+</html>
